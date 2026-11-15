@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arcade tests</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body { font: 14px/1.6 ui-monospace, "DejaVu Sans Mono", Menlo, monospace; margin: 16px; background: #0b1020; color: #d7e0f0; }
+    h1 { font-size: 18px; }
+    #log div { white-space: pre-wrap; }
+    .ok { color: #7cf5c4; }
+    .fail { color: #ff8a8a; }
+  </style>
+</head>
+<body>
+  <h1 id="summary">Running tests…</h1>
+  <div id="log"></div>
+
+  <script>
+    // If the runner itself cannot load (a typo in a file it imports), say so instead of hanging.
+    function pageError(message) {
+      document.title = 'ERROR';
+      document.getElementById('summary').textContent = 'The test page failed to load: ' + message;
+      document.getElementById('summary').className = 'fail';
+      if (location.search.indexOf('report') !== -1) {
+        fetch('/__report', { method: 'POST', body: JSON.stringify({ kind: 'page-error', message: message, failed: 1, passed: 0 }) });
+      }
+    }
+    addEventListener('error', function (event) {
+      pageError(String(event.message || (event.target && event.target.src) || 'a script failed to load'));
+    }, true);
+    addEventListener('unhandledrejection', function (event) {
+      pageError(String((event.reason && event.reason.message) || event.reason));
+    });
+  </script>
+  <script type="module" src="./browser-runner.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Screenshots and other output from scripts/arcade.py
+.out/
+
+# Python
+__pycache__/
+*.pyc

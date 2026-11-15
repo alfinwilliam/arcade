@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>arcade smoke test</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body { font: 14px/1.6 ui-monospace, monospace; margin: 16px; background: #0b1020; color: #d7e0f0; }
+    iframe { display: block; border: 1px solid #334; margin: 8px 0; background: #fff; }
+    .ok { color: #7cf5c4; }
+    .fail { color: #ff8a8a; }
+  </style>
+</head>
+<body>
+  <div id="log"></div>
+  <script type="module">
+    // Loads each page in a frame and waits for <html data-ready> (set by shared/shell.js when
+    // the page calls ready()) or <html data-error> (set by shell.js when a script throws).
+    //   tests/smoke.html?pages=index.html,games/drift/index.html
+    const params = new URLSearchParams(location.search);
+    const pages = (params.get('pages') || 'index.html').split(',').filter(Boolean);
+    const WAIT_MS = 8000;      // how long a page gets to become ready
+    const SETTLE_MS = 600;     // after ready, keep watching this long for a late error
+
+    const log = document.getElementById('log');
+    const lines = [];
+    let failed = 0;
+
+    function rootOf(frame) {
+      try {
+        return frame.contentDocument ? frame.contentDocument.documentElement : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function watch(frame) {
+      const started = performance.now();
+      let readyAt = 0;
+      return new Promise((resolve) => {
+        const timer = setInterval(() => {
+          const root = rootOf(frame);
+          const now = performance.now();
+          const finish = (ok, why) => {
+            clearInterval(timer);
+            resolve({ ok, why, ms: Math.round(now - started) });
+          };
+          if (root && root.dataset.error) return finish(false, 'JS error: ' + root.dataset.error);
+          if (root && root.dataset.ready && !readyAt) readyAt = now;
+          if (readyAt && now - readyAt > SETTLE_MS) return finish(true, '');
+          if (!readyAt && now - started > WAIT_MS) {
+            return finish(false, 'never set the ready flag (does the page call ready() from shared/shell.js?)');
+          }
+        }, 50);
+      });
+    }
+
+    for (const page of pages) {
+      const frame = document.createElement('iframe');
+      frame.width = 1024;
+      frame.height = 600;
+      frame.src = '../site/' + page;
+      document.body.append(frame);
+      const result = await watch(frame);
+      frame.remove();
+
+      if (!result.ok) failed += 1;
+      const line = `${result.ok ? 'ok  ' : 'FAIL'}  ${page}  (${result.ms} ms)${result.why ? '\n        ' + result.why : ''}`;
+      lines.push(line);
+      const row = document.createElement('div');
+      row.textContent = line;
+      row.className = result.ok ? 'ok' : 'fail';
+      row.style.whiteSpace = 'pre-wrap';
+      log.append(row);
+    }
+
+    lines.push(`${pages.length - failed} pages ok, ${failed} failed`);
+    document.title = failed === 0 ? 'PASS' : 'FAIL';
+    if (params.has('report')) {
+      await fetch('/__report', {
+        method: 'POST',
+        body: JSON.stringify({ kind: 'smoke', passed: pages.length - failed, failed, lines }),
+      });
+    }
+  </script>
+</body>
+</html>

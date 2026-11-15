@@ -1,0 +1,20 @@
+/* Styles for the template game only. Shared pieces (.btn, .panel, .row ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours. */
+
+:root { --accent: var(--accent-1); }   /* this game's accent colour: accent-1 to accent-6 */
+
+.hop-board {
+  display: flex; align-items: flex-end; justify-content: center; gap: 16px;
+  padding: 8px 0;
+}
+.hop-box { display: grid; gap: 4px; justify-items: center; }
+.hop-label { color: var(--muted); font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.hop-number {
+  min-width: 2.4ch; padding: 12px 20px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  font: 700 clamp(40px, 12vw, 72px)/1 var(--mono); text-align: center;
+}
+.hop-now { color: var(--accent); background: var(--surface-2); }
+.hop-goal { color: var(--good); border-style: dashed; }
+.hop-arrow { padding-bottom: 24px; color: var(--muted); font-size: 28px; }
+.hop-move { font: 700 20px var(--mono); }

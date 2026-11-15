@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>arcade run</title>
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <pre id="out"></pre>
+  <script type="module">
+    // Runs one JS module and collects what it logs. Used by `arcade.py run FILE.js`.
+    const params = new URLSearchParams(location.search);
+    const out = document.getElementById('out');
+    const lines = [];
+
+    function text(value) {
+      if (typeof value === 'string') return value;
+      try {
+        const json = JSON.stringify(value);
+        return json === undefined ? String(value) : json;
+      } catch {
+        return String(value);
+      }
+    }
+    function record(parts) {
+      const line = parts.map(text).join(' ');
+      lines.push(line);
+      out.textContent += line + '\n';
+    }
+    for (const level of ['log', 'info', 'warn', 'error']) {
+      console[level] = (...parts) => record(parts);
+    }
+
+    let failed = 0;
+    try {
+      await import(params.get('module'));
+    } catch (error) {
+      failed = 1;
+      record(['ERROR: ' + ((error && error.stack) || error)]);
+    }
+
+    if (params.has('report')) {
+      await fetch('/__report', {
+        method: 'POST',
+        body: JSON.stringify({ kind: 'run', passed: 1 - failed, failed, lines }),
+      });
+    }
+  </script>
+</body>
+</html>
