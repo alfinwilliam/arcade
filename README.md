@@ -49,7 +49,7 @@ scripts/arcade.py         the one tool
 .github/workflows/pages.yml   check, then publish
 ```
 
-Locally the site is served under `/site/`, and on GitHub Pages under `/arcade/`. Both are subfolders, so a link that starts with `/` breaks in both places the same way. That is why every link in the site is relative.
+Locally the site is served under `/site/`, and on GitHub Pages under `/arcade/`. Both are subfolders, so a link that starts with `/` breaks in both places the same way. That is why every link to the site's own files is relative. The one exception is `404.html`, which GitHub shows for a missing address at any depth; its comments explain how it finds its way home.
 
 ## How a game is put together
 
@@ -82,7 +82,7 @@ The rules every game follows:
 3. Run `python3 scripts/arcade.py preview` and open the game with `?dev` on the end of the address, for example `http://127.0.0.1:8000/site/games/_template/?dev`.
 4. Win the level. With `?dev`, the win screen shows the inputs you used. Paste them into the entry's `solution`.
 5. Run `python3 scripts/arcade.py check`.
-6. Commit and push. The site updates in about a minute.
+6. Commit and push. The site updates when the run on the Actions tab turns green.
 
 If you save a level that cannot be won as written, `test` fails and names the level. If you make a typing mistake in a data file, the page shows a red banner with the error instead of going blank.
 
@@ -104,11 +104,13 @@ A game folder with no line in `site/games.js` is still published, but nothing li
 | `test` | Locally in Chrome, on GitHub under Node | A level whose `solution` no longer wins, a broken rule |
 | `smoke` | Locally only | A page that throws an error or never finishes loading |
 
-The test files are the same in both places. Locally they run in Chrome so nothing has to be installed. On GitHub they run under Node, which the runner already has, through `tests/run-node.mjs`.
+The test files are the same in both places. Locally they run in Chrome so nothing has to be installed. On GitHub they run under Node, which the workflow sets up, through `tests/run-node.mjs`.
 
 `smoke` does not run on GitHub. A mistake in a `main.js` can therefore pass the GitHub checks, so run `check` locally before pushing.
 
-This repo is public, so `lint` allows only example values: addresses in `10.0.0.0/8`, `192.0.2.0/24`, `198.51.100.0/24` and `203.0.113.0/24`, the account id `123456789012`, and hostnames under `example.com`. It is a list of what is allowed, not a list of what is forbidden.
+This repo is public, so `lint` looks for things that are not example values: IP addresses outside the private and documentation ranges, 12-digit numbers other than `123456789012`, hostnames ending in `.com`, `.net`, `.org`, `.io`, `.ai` or `.cloud` that are not `example.com` or a documentation site, email addresses, AWS-style resource ids and common key formats. The exact lists are at the top of the lint section in `scripts/arcade.py`.
+
+It is a safety net, not a guarantee. It cannot tell a real private range such as `10.42.0.0/16` from an example, and it cannot recognise a company, product, person or ticket name at all. Read new content once with that in mind before pushing. The example values to use are `10.0.0.0/16`, `123456789012`, `example.com` and `sample-app`.
 
 ## Deploy
 
@@ -125,16 +127,16 @@ Pushing to `main` publishes the site. The file that does it is `.github/workflow
 
 **Permissions.** Each job gets a short-lived token. `permissions:` says what that token may do. `check` may only read the code. `deploy` may write to Pages (`pages: write`) and may ask GitHub for proof of its own identity (`id-token: write`), which Pages requires before it accepts a deploy. Neither job can change the code.
 
-**Environment.** `environment: github-pages` is the name GitHub gives to "the live site". It shows the address of the last deploy on the repo page, and by default only the main branch is allowed to deploy to it.
+**Environment.** `environment: github-pages` is the name GitHub gives to "the live site". It shows the address of the last deploy on the repo page. Rules about which branches may deploy to it live under Settings → Environments → github-pages.
 
-**The `@v7` after each action.** An action is someone else's reusable step. The part after `@` pins which major version you use, so an update does not change your pipeline by surprise.
+**The `@v7` and `@v5` after each action.** An action is someone else's reusable step. The part after `@` pins which major version you use, so an update does not change your pipeline by surprise.
 
 ## Roll back
 
 | Situation | What to do |
 |---|---|
 | The last push broke the site | `git revert <commit>` then `git push`. The workflow publishes the previous content |
-| You want an older version live again without changing history | Actions tab → pick the last good run → "Re-run all jobs" |
+| You want an older version live again without changing history | Actions tab → pick the last good run → "Re-run all jobs". GitHub allows this only for a limited time after the run; after that, use `git revert` |
 | The checks fail on GitHub | Nothing was published. Open the failed run, read the step that failed, fix, push again |
 | Take the site down, keep the repo | Settings → Pages → Unpublish site, or `gh api -X DELETE repos/alfinwilliam/arcade/pages` |
 | Remove everything | Settings → General → Delete this repository |
@@ -147,7 +149,7 @@ After a deploy, browsers may keep the old files for up to ten minutes. A hard re
 
 **Node version.** `node-version: 24` in `pages.yml` picks the Node used for the tests on GitHub. The tests use nothing version-specific, so moving to a newer long-term-support version is a one-number change.
 
-**Chrome.** The local checks start Chrome with `--headless`. If a future Chrome changes its flags, the symptom is `the page never reported back`. Run `preview`, open `http://127.0.0.1:8000/tests/` in a normal browser window, and you will see the same tests run with the error on screen. The flags are in one place: `browser_command` in `scripts/arcade.py`. To use a different browser binary, set `ARCADE_BROWSER` to its path.
+**Chrome.** The local checks start Chrome with `--headless`. If a future Chrome changes its flags, the symptom is `the page never reported back`. Run `preview`, open `http://127.0.0.1:8000/tests/` in a normal browser window, and you will see the same tests run with the error on screen. The flags are in `browser_command` in `scripts/arcade.py`, plus the screenshot flags in `cmd_shots`. To use a different browser binary, set `ARCADE_BROWSER` to its path.
 
 **How this repo was set up.** Done once, recorded here in case it is ever needed again:
 
@@ -161,6 +163,6 @@ The second line turns on Pages with "GitHub Actions" as the source. The same set
 
 ## About the content
 
-Some of these games teach networking and Kubernetes ideas. Their lessons were checked against the AWS and Kubernetes documentation by automated review when the site was built, in November 2026. Treat them as learning aids, not as a reference, and trust the official documentation where they differ.
+A game that teaches networking or Kubernetes ideas is added to the hub only after its lessons have been checked against the official AWS and Kubernetes documentation by automated review (in November 2026, when the games were built). Treat them as learning aids, not as a reference, and trust the official documentation where they differ.
 
 Built with AI assistance (Claude Code). Kept up by hand.
