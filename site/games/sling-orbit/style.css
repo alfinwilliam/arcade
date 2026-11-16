@@ -1,0 +1,47 @@
+/* Styles for Sling Orbit only. Shared pieces (.btn, .panel, .row, .stage ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours.
+ * The colours drawn on the canvas are read from the same tokens in main.js. */
+
+:root { --accent: var(--accent-4); }   /* this game's accent colour: accent-1 to accent-6 */
+
+/* Phone: one column, in the order the page is built: level text, field, result, controls. */
+.so-layout { display: grid; gap: 16px; }
+.so-stage { max-width: 600px; justify-self: center; }
+
+/* Wide screen: the field on the left, everything else in a column on the right.
+ * The last row (1fr) soaks up the spare height, so the panels stay packed at the top. */
+@media (min-width: 820px) {
+  .so-layout {
+    grid-template-columns: minmax(0, 560px) minmax(260px, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    align-items: start;
+  }
+  .so-stage    { grid-column: 1; grid-row: 1 / span 4; }
+  .so-info     { grid-column: 2; grid-row: 1; }
+  .so-controls { grid-column: 2; grid-row: 2; }
+  .so-result   { grid-column: 2; grid-row: 3; }
+  .so-dev      { grid-column: 2; grid-row: 4; }
+}
+
+.so-info { padding: 12px 16px; }
+.so-controls { padding: 12px; }
+.so-goal { font-weight: 600; }
+
+/* The line of numbers under the buttons: the aim before launch, the clock in flight. */
+.so-status { min-height: 3em; color: var(--muted); font: 14px/1.5 var(--mono); }
+
+.so-hold { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; font: 14px var(--mono); }
+.so-hold .meter > span { background: var(--good); }
+
+/* Launch and Brake share the first row; the four fine-aim arrows and Reset share the second. */
+.so-wide { flex: 1 1 auto; }
+.so-nudges { gap: 4px; flex-wrap: nowrap; }
+.so-nudge { padding: 8px; font-size: 18px; }
+.so-reset { margin-left: auto; padding: 8px 12px; }
+
+/* Level chips: narrow enough that six fit in one row on a phone.
+ * Under the number is the best time in seconds, with a tick, once the level is solved. */
+.levels .level-chip { min-width: 48px; padding: 4px 6px; }
+.so-best { color: var(--muted); font-size: 12px; }
+
+.so-result-title { font-size: 22px; }

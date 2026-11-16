@@ -149,6 +149,8 @@ After a deploy, browsers may keep the old files for up to ten minutes. A hard re
 
 **Node version.** `node-version: 24` in `pages.yml` picks the Node used for the tests on GitHub. The tests use nothing version-specific, so moving to a newer long-term-support version is a one-number change.
 
+**Runner image.** `runs-on: ubuntu-latest` follows GitHub's current Ubuntu image, which moves to a newer release from time to time; the run page shows a notice before it happens. The checks need only Python 3 and the Node that `setup-node` installs, so a move should not matter. If one ever does, pin a release instead, for example `runs-on: ubuntu-24.04`.
+
 **Chrome.** The local checks start Chrome with `--headless`. If a future Chrome changes its flags, the symptom is `the page never reported back`. Run `preview`, open `http://127.0.0.1:8000/tests/` in a normal browser window, and you will see the same tests run with the error on screen. The flags are in `browser_command` in `scripts/arcade.py`, plus the screenshot flags in `cmd_shots`. To use a different browser binary, set `ARCADE_BROWSER` to its path.
 
 **How this repo was set up.** Done once, recorded here in case it is ever needed again:

@@ -1,0 +1,106 @@
+/* Styles for Traffic Spike only. Shared pieces (.btn, .panel, .row, .meter ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours.
+ *
+ * The --ts-* colours below are also read by main.js when it draws the canvas,
+ * so the lane, the legend and the buttons always agree. */
+
+:root {
+  --accent: var(--accent-3);
+
+  /* one colour per kind of request (each also has its own shape) */
+  --ts-static: var(--accent-6);
+  --ts-api: var(--accent-2);
+  --ts-bot: var(--accent-5);
+
+  /* one colour per component; a filter shares the colour of what it removes */
+  --ts-server: var(--accent-3);
+  --ts-cache: var(--accent-6);
+  --ts-limiter: var(--accent-5);
+  --ts-queue: var(--accent-4);
+}
+
+/* ------------------------------------------------------------ status line */
+
+.ts-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.ts-stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font: 600 15px var(--mono); }
+.ts-money { color: var(--warn); }
+
+.ts-budget { display: grid; gap: 4px; }
+.ts-budget-label { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.ts-budget .meter { height: 14px; }
+.ts-budget .meter > span { background: var(--good); }
+.ts-budget .meter[data-level="mid"] > span { background: var(--warn); }
+.ts-budget .meter[data-level="low"] > span { background: var(--bad); }
+
+/* ------------------------------------------------------------ the lane */
+
+.ts-board { display: grid; gap: 4px; }
+
+/* The canvas only needs taps (to pick a slot), so let a finger scroll the page across it. */
+.ts-stage { touch-action: manipulation; cursor: pointer; }
+
+/* One button per slot, lined up under the slots drawn on the canvas.
+ * main.js sets the left and right padding so the columns match. */
+.ts-slots { display: grid; gap: 4px; grid-template-columns: repeat(var(--ts-slot-count, 4), minmax(0, 1fr)); }
+.ts-slot {
+  flex-direction: column; gap: 0;
+  padding: 4px 2px;
+  font-size: 12px; line-height: 1.3;
+  overflow: hidden;
+}
+.ts-slot-number { color: var(--muted); font: 600 11px var(--mono); }
+.ts-slot[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* What just happened, or why something was refused. Kept two lines tall so the page does not jump. */
+.ts-say { min-height: 3em; }
+@media (min-width: 640px) { .ts-say { min-height: 1.5em; } }
+.ts-say.ts-refused { color: var(--bad); }
+
+/* ------------------------------------------------------------ shop and controls */
+
+.ts-shop { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.ts-buy {
+  display: grid; gap: 2px; justify-items: start; align-content: start;
+  padding: 8px 10px; text-align: left;
+  border-left-width: 4px;
+}
+.ts-buy[data-tower="server"] { border-left-color: var(--ts-server); }
+.ts-buy[data-tower="cache"] { border-left-color: var(--ts-cache); }
+.ts-buy[data-tower="limiter"] { border-left-color: var(--ts-limiter); }
+.ts-buy[data-tower="queue"] { border-left-color: var(--ts-queue); }
+.ts-buy-top { display: flex; align-items: center; gap: 8px; width: 100%; }
+.ts-buy-cost { margin-left: auto; color: var(--warn); font-family: var(--mono); }
+.ts-buy-does { color: var(--muted); font-size: 13px; font-weight: 400; line-height: 1.35; }
+
+.ts-speed { display: inline-flex; gap: 4px; align-items: center; }
+.ts-speed .btn { padding: 8px 10px; font-family: var(--mono); }
+.ts-speed .btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+.ts-keys { font-size: 13px; line-height: 2; }
+
+/* ------------------------------------------------------------ wave list and legend */
+
+.ts-waves { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ts-wave {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--line); border-radius: 8px;
+  font: 14px var(--mono);
+}
+.ts-wave[data-when="now"] { border-color: var(--accent); background: var(--surface-2); }
+.ts-wave[data-when="done"] { color: var(--muted); }
+.ts-wave-name { min-width: 9ch; font-weight: 700; }
+.ts-wave-pay { margin-left: auto; color: var(--warn); }
+
+.ts-count { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.ts-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; }
+
+.ts-shape { width: 12px; height: 12px; flex: none; }
+.ts-shape[data-kind="static"] { fill: var(--ts-static); }
+.ts-shape[data-kind="api"] { fill: var(--ts-api); }
+.ts-shape[data-kind="bot"] { fill: var(--ts-bot); }
+
+/* The win or lose box sits right under the lane, so the result and the picture are seen together. */
+.ts-result { background: var(--surface-2); }
+.ts-result-facts { font-family: var(--mono); }
+.ts-result-stars { font-size: 32px; line-height: 1; }

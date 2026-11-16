@@ -160,13 +160,15 @@ function drawResult() {
   }
 
   const earned = stars(state);
-  view.result.replaceChildren(
+  const parts = [
     el('h2', {}, won ? `Solved in ${state.used} ${state.used === 1 ? 'move' : 'moves'}` : 'Out of moves'),
     won ? el('p', { class: 'stars', role: 'img', 'aria-label': `${earned} of 3 stars` }, starText(earned)) : null,
     won && lastLevel ? el('p', {}, 'That was the last level.') : null,
     el('div', { class: 'row' }, view.primary),
     DEV && won ? el('pre', { class: 'dev' }, 'solution: ' + JSON.stringify(recorded)) : null,
-  );
+  ];
+  // replaceChildren() would show a null as the text "null", so drop the parts not in use.
+  view.result.replaceChildren(...parts.filter(Boolean));
 }
 
 // -------------------------------------------------------------------- start
