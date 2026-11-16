@@ -72,5 +72,11 @@ for (const { game, levels, error } of loaded) {
   if (error) list.append(el('p', { class: 'panel' }, `${game.title}: could not load its levels (${error}).`));
   else if (levels.some(hasLesson)) list.append(gameSection(game, levels));
 }
-main.append(list);
+main.append(
+  list,
+  el('footer', { class: 'muted hub-foot' },
+    'By ',
+    el('a', { href: 'https://alfinwilliam.github.io/' }, 'Alfin William'),
+    '.'),
+);
 ready();

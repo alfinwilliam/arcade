@@ -201,7 +201,9 @@ main.append(
       el('p', {}, el('a', { href: './lessons/' }, 'Every lesson in one place →')))),
   listView(),
   el('footer', { class: 'muted hub-foot' },
-    'Plain HTML, CSS and JavaScript. ',
+    'By ',
+    el('a', { href: 'https://alfinwilliam.github.io/' }, 'Alfin William'),
+    '. Plain HTML, CSS and JavaScript. ',
     el('a', { href: 'https://github.com/alfinwilliam/arcade' }, 'Source on GitHub'),
     '.'),
 );
