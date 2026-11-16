@@ -22,6 +22,8 @@ export const games = [
     blurb: 'One-lane tower defence: place caches, rate limiters, queues and servers so no real request reaches the exit unanswered.' },
   { id: 'escape-shell', title: 'Escape Shell', tag: 'terminal', accent: 5, group: 'Operations',
     blurb: 'A service is down on a pretend server. Investigate with real commands, find the cause, and bring it back.' },
+  { id: 'noisy-pager', title: 'Noisy Pager', tag: 'alerting', accent: 8, group: 'Operations',
+    blurb: 'Tune a Prometheus alert against a simulated day: page for every real incident in time, and for nothing else.' },
   { id: 'sling-orbit', title: 'Sling Orbit', tag: 'physics', accent: 4, group: 'Just for fun',
     blurb: 'Aim one launch and let the planets bend your path through every target, then brake into a parking orbit.' },
   { id: 'drift', title: 'Drift', tag: 'toy', accent: 6, group: 'Just for fun', lessons: false,

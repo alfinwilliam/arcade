@@ -1,0 +1,53 @@
+/* Styles for Noisy Pager only. Shared pieces (.btn, .panel, .row ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours. */
+
+:root { --accent: var(--accent-8); }   /* this game's accent colour */
+
+/* Seven level chips fit on one row on a 360 px phone (more wrap to a second row). */
+.levels { gap: 6px; }
+@media (max-width: 380px) { .levels { gap: 3px; } }
+.level-chip { min-width: var(--tap); padding: 4px 6px; }
+.level-chip .stars { font-size: 10px; letter-spacing: 0; }
+
+.np-brief { font-size: 15px; }
+.np-chart { cursor: crosshair; }
+.np-incidents { font-size: 14px; }   /* the deadlines, under the Run button */
+.np-legend { font-size: 13px; }
+.np-keys { font-size: 13px; }
+
+/* The rule builder: rows that wrap on a narrow screen. */
+.np-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.np-select {
+  flex: 1 1 140px; min-width: 0; min-height: var(--tap); padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text);
+  font: 600 15px var(--font);
+}
+.np-select:hover { border-color: var(--accent); }
+.np-threshold-row { flex-wrap: nowrap; }
+/* width: 0 so the slider never makes the page wider than a 360 px phone; flex fills the row. */
+.np-slider { flex: 1 1 0; width: 0; min-width: 60px; min-height: var(--tap); accent-color: var(--accent); }
+.np-step { flex: none; padding: 0; font: 700 20px var(--mono); }
+.np-threshold { flex: none; min-width: 8ch; font-size: 14px; text-align: right; }
+.np-for { flex: 0 1 130px; }
+.np-run { flex: 1 1 160px; white-space: nowrap; }
+.np-status { font-size: 14px; }
+
+.np-expr-label { font-size: 13px; }
+.np-expr, .np-snippet pre {
+  margin: 0; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--surface-2);
+  font: 13px/1.5 var(--mono);
+}
+.np-expr { white-space: pre-wrap; word-break: break-all; }
+.np-snippet { display: grid; gap: 4px; }
+.np-snippet pre { overflow-x: auto; }
+@media (max-width: 480px) { .np-expr, .np-snippet pre { font-size: 12px; } }
+.np-snippet-label { font-size: 13px; color: var(--muted); }
+
+/* Run results: every line starts with ✓ or ✕, so colour is never the only signal. */
+.np-outcomes { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.np-good { color: var(--good); }
+.np-bad { color: var(--bad); }
+.np-docs { overflow-wrap: anywhere; }
