@@ -330,9 +330,10 @@ DOC_HOSTS = ("github.com", "github.io", "amazon.com", "kubernetes.io", "mozilla.
              "nodejs.org", "python.org", "w3.org", "chromium.org", "rfc-editor.org", "ietf.org",
              # tool documentation, and the API groups that appear in Kubernetes YAML
              "istio.io", "argoproj.io", "argo-cd.readthedocs.io", "k8s.io", "prometheus.io",
-             "coreos.com", "jenkins.io", "atlassian.com", "bitbucket.org", "sre.google")
+             "coreos.com", "jenkins.io", "atlassian.com", "bitbucket.org", "sre.google", "hashicorp.com")
 # Hosts that pages under site/ may link to: examples, and documentation (links only, never loads).
-SITE_LINK_HOSTS = EXAMPLE_HOSTS + DOC_HOSTS + ("localhost", "127.0.0.1")
+SITE_LINK_HOSTS = EXAMPLE_HOSTS + DOC_HOSTS + ("localhost", "127.0.0.1",
+                                              "kubernetes.default.svc")   # the in-cluster API address in Argo CD YAML
 ALLOWED_EMAIL_DOMAINS = EXAMPLE_HOSTS + ("users.noreply.github.com",)
 EXAMPLE_ACCOUNT_ID = "123456789012"
 

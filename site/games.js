@@ -20,6 +20,8 @@ export const games = [
     blurb: 'Buy nodes, place pods by their CPU and memory requests, ride out taints and spot reclaims, and keep the bill under the cap.' },
   { id: 'ship-it', title: 'Ship It', tag: 'pipeline', accent: 7, group: 'Delivery',
     blurb: 'Rearrange a CI/CD pipeline until every check passes: fail fast, run in parallel, cache, gate and lock the deploy.' },
+  { id: 'out-of-sync', title: 'Out of Sync', tag: 'gitops', accent: 9, group: 'Delivery',
+    blurb: 'Git says one thing, the cluster another. Use Argo CD sync, prune, self-heal, hooks and git revert to end Synced and Healthy.' },
   { id: 'traffic-spike', title: 'Traffic Spike', tag: 'defence', accent: 3, group: 'Operations',
     blurb: 'One-lane tower defence: place caches, rate limiters, queues and servers so no real request reaches the exit unanswered.' },
   { id: 'escape-shell', title: 'Escape Shell', tag: 'terminal', accent: 5, group: 'Operations',

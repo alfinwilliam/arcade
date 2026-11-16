@@ -6,6 +6,22 @@ Live site: https://alfinwilliam.github.io/arcade/
 
 This README is the runbook. Everything needed to run, change, check and publish the site is here.
 
+## The games
+
+| Game | Folder | What it teaches |
+|---|---|---|
+| Packet Quest | `packet-quest` | DNS, security groups, refused versus timeout, longest-prefix routes, Service `targetPort`, return-path faults (internet gateway, stateless NACLs, NAT) |
+| Pod Packer | `pod-packer` | Kubernetes scheduling: requests, taints and tolerations, node selectors, draining, spot interruptions |
+| Ship It | `ship-it` | CI/CD: fail fast, parallel steps, artifacts, caches, branch rules, approvals, build once and promote, deploy locks. Shown as Jenkins, Bitbucket Pipelines and GitHub Actions |
+| Out of Sync | `out-of-sync` | Argo CD and GitOps: sync and health status, prune, self-heal, hooks and sync waves, rolling back with `git revert`, ignoreDifferences for HPA-managed replicas |
+| Traffic Spike | `traffic-spike` | Caches, rate limiters, queues and servers under load |
+| Escape Shell | `escape-shell` | Linux troubleshooting: df, du, ss, ps, systemctl, journalctl, permissions |
+| Noisy Pager | `noisy-pager` | Prometheus alerting: thresholds, `for:`, `rate()`, p99 from histograms, error ratio, alerting on silence, SLO burn rate |
+| Sling Orbit | `sling-orbit` | Nothing: a physics puzzle for fun |
+| Drift | `drift` | Nothing: a generative-art toy |
+
+The [lessons page](https://alfinwilliam.github.io/arcade/lessons/) lists every lesson with its real command or config. It reads each game's `levels.js`, so it updates itself when you add a level.
+
 ## Run it locally
 
 ```
@@ -52,8 +68,10 @@ Then `python3 scripts/arcade.py run ~/try.js` prints what it logs. A file outsid
 
 ```
 site/                     the only folder that is published
-  index.html, hub.js      the hub page
-  games.js                the list of games shown on the hub
+  index.html, hub.js      the hub page: games as planets orbiting a sun
+  hub.css                 the hub's styles
+  games.js                the list of games shown on the hub, and its sections
+  lessons/                every lesson from every game, on one page
   404.html
   shared/                 base.css, shell.js, storage.js, canvas.js
   games/_template/        a tiny complete game: the pattern to copy
@@ -124,7 +142,7 @@ The page itself also shows a red banner with the error and the file and line, in
    - `levels.js`: the `tpl-` id prefix and the header comment;
    - `style.css`: the accent number.
 4. Change the rules in `logic.js`, the content in `levels.js` and the page in `main.js`. Add a test to `tests/<name>.test.js` for each new rule.
-5. Add one line to `site/games.js` so the hub shows a card for it. Use the same accent number as the game's `style.css`; all six are taken, so share one.
+5. Add one line to `site/games.js` so the hub shows it as a planet. Use the same accent number (1 to 11) as the game's `style.css`, and a `group` from the `groups` list at the top of that file. Games in the "Just for fun" group orbit close to the sun; all others go on the outer ring.
 6. Run `python3 scripts/arcade.py check`.
 
 A game folder with no line in `site/games.js` is still published, but nothing links to it.

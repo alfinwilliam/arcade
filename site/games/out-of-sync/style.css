@@ -1,0 +1,105 @@
+/* Styles for Out of Sync only. Shared pieces (.btn, .panel, .row ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours. */
+
+:root { --accent: var(--accent-9); }   /* indigo */
+
+.oos-hint { font-size: 15px; }
+.oos-meta, .oos-next, .oos-note { font-size: 14px; }
+.oos-meta { color: var(--muted); }
+.oos-note { padding: 6px 10px; border-left: 3px solid var(--warn); background: var(--surface-2); border-radius: 6px; }
+.oos-check { margin-left: 6px; vertical-align: 1px; }
+
+/* The two Argo CD badges and the action count. The symbol carries the meaning; colour repeats it. */
+.oos-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.oos-badge {
+  display: grid; gap: 2px; min-width: 120px; padding: 6px 12px;
+  border: 2px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
+}
+.oos-badge-label { color: var(--muted); font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.oos-badge strong { font: 700 18px/1.2 var(--mono); white-space: nowrap; }
+[data-tone="good"] { border-color: var(--good); }
+[data-tone="warn"] { border-color: var(--warn); }
+[data-tone="bad"] { border-color: var(--bad); }
+.oos-badge[data-tone="good"] strong { color: var(--good); }
+.oos-badge[data-tone="warn"] strong { color: var(--warn); }
+.oos-badge[data-tone="bad"] strong { color: var(--bad); }
+
+/* Actions */
+.oos-group { display: grid; gap: 6px; }
+.oos-group h3, .oos-latest h3 { color: var(--muted); font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.oos-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.oos-act { justify-content: flex-start; text-align: left; }
+.oos-act[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.oos-main { border-color: var(--accent); }
+.oos-cmd { font: 600 13px var(--mono); overflow-wrap: anywhere; }
+
+/* What happened */
+.oos-lines { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.oos-entry { font-size: 14px; overflow-wrap: anywhere; }
+.oos-who {
+  display: inline-block; min-width: 5.5em; margin-right: 4px;
+  color: var(--accent); font: 600 12px var(--mono); text-transform: uppercase;
+}
+.oos-log { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; max-height: 360px; overflow: auto; }
+.oos-log > li { display: grid; grid-template-columns: 2em 1fr; }
+.oos-turn { color: var(--muted); font: 600 13px var(--mono); }
+
+/* Git | Cluster, one row per resource */
+.oos-board { display: grid; gap: 8px; }
+.oos-heads, .oos-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.oos-head-title { color: var(--muted); font: 600 13px var(--mono); overflow-wrap: anywhere; }
+.oos-rows { display: grid; gap: 8px; }
+.oos-row.is-out .oos-card { border-left: 4px solid var(--warn); }
+.oos-card {
+  display: grid; align-content: start; gap: 2px; min-width: 0;
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); font: 14px/1.5 var(--mono);
+}
+.oos-card h4 { margin: 0 0 2px; font: 700 14px var(--mono); overflow-wrap: anywhere; }
+.oos-side { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.oos-match { text-transform: none; letter-spacing: 0; }
+.oos-field { display: flex; gap: 4px; overflow-wrap: anywhere; }
+.oos-mark { flex: none; width: 1.1em; font-weight: 700; }
+.oos-field.is-differs, .oos-field.is-removed { background: var(--surface-2); outline: 1px dashed var(--warn); border-radius: 4px; }
+.oos-field.is-differs .oos-mark, .oos-field.is-removed .oos-mark { color: var(--warn); }
+.oos-field.is-ignored { color: var(--muted); }
+.oos-why { color: var(--muted); font-size: 12px; }
+.oos-gone { color: var(--muted); }
+.oos-small { color: var(--muted); font: 12px/1.4 var(--font); }
+.oos-health { margin-top: 4px; padding-left: 8px; border-left: 3px solid var(--line); font-size: 13px; }
+
+/* Timeline */
+.oos-timeline { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.oos-when {
+  display: inline-block; min-width: 4em; color: var(--muted);
+  font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.oos-when-next .oos-when { color: var(--accent); }
+.oos-when-done { color: var(--muted); }
+
+/* Win screen */
+.oos-lesson { font-size: 17px; }
+.oos-why-list, .oos-docs { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.oos-docs a { overflow-wrap: anywhere; }
+.oos-snippet { display: grid; gap: 4px; min-width: 0; }
+.oos-snippet-label { color: var(--accent); font: 600 13px var(--mono); }
+.oos-snippet pre {
+  margin: 0; padding: 10px 12px; overflow-x: auto;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2);
+  font: 13px/1.5 var(--mono);
+}
+
+/* Phones: each resource's Git card sits above its cluster card, and the level picker fits on one
+ * row (seven levels at 390 px), so the Sync and Wait buttons stay in view on first load. */
+@media (max-width: 640px) {
+  .oos-heads { grid-template-columns: 1fr; gap: 0; }
+  .oos-row { grid-template-columns: 1fr; gap: 0; }
+  .levels { gap: 5px; }
+  .level-chip { padding: 2px 4px; }
+  .level-chip .stars { font-size: 11px; letter-spacing: 0; }
+  .oos-row .oos-card:first-child { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .oos-row .oos-card:last-child { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+  .oos-badges { gap: 6px; }
+  .oos-badge { min-width: 0; flex: 1 1 auto; padding: 4px 6px; }
+  .oos-badge strong { font-size: 13px; }
+}
