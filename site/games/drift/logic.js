@@ -32,7 +32,7 @@ const FULL_TURN = Math.PI * 2;
 // The allowed range [lowest, highest] for every number in a preset.
 // validatePreset() reads this table, and presets.js describes the same ranges in words.
 export const LIMITS = {
-  particles: [20, MAX_PARTICLES],
+  particles: [MIN_PARTICLES, MAX_PARTICLES],
   speed: [0.2, 4],
   fade: [0, 0.5],
   swirl: [0.0005, 0.05],
@@ -42,6 +42,7 @@ export const LIMITS = {
   width: [0.5, 4],
 };
 export const MAX_PALETTE = 6;
+export const MIN_FADE = 0.03;             // fade is 0 (never fade) or at least this; see presets.js
 export const SNAP_RANGE = [3, 12];        // snap is 0 (off) or a whole number in this range
 
 // ---------------------------------------------------------------- seeded random numbers
@@ -87,7 +88,9 @@ export function validatePreset(preset) {
   const palette = preset.palette;
   if (!Array.isArray(palette) || palette.length < 1 || palette.length > MAX_PALETTE) {
     problems.push(`palette must be a list of 1 to ${MAX_PALETTE} colours`);
-  } else if (!palette.every(isHexColour)) {
+  } else if (!Array.from(palette).every(isHexColour)) {
+    // Array.from turns an empty slot (a double comma in the list) into undefined, which
+    // fails the check. A plain palette.every() would skip the empty slot and pass.
     problems.push('every palette colour must look like "#rrggbb"');
   }
 
@@ -95,6 +98,11 @@ export function validatePreset(preset) {
     if (!isNumberIn(preset[field], range)) {
       problems.push(`${field} must be a number from ${range[0]} to ${range[1]}`);
     }
+  }
+
+  // Inside the 0 to 0.5 range, fade still has a gap: small values leave strong ghosts.
+  if (isNumberIn(preset.fade, LIMITS.fade) && preset.fade > 0 && preset.fade < MIN_FADE) {
+    problems.push(`fade must be 0, or from ${MIN_FADE} to ${LIMITS.fade[1]} (smaller values tint the background)`);
   }
 
   const snapIsOff = preset.snap === 0;
@@ -159,7 +167,7 @@ function respawn(world, particle) {
 export function createWorld(preset, width, height, seed) {
   const random = createRandom(seed);
   const world = {
-    preset, width, height, seed, random,
+    preset, width, height, random,
     tick: 0,
     field: createField(preset, width, height, random),
     particles: [],

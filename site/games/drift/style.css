@@ -8,10 +8,12 @@
 
 .drift-controls { display: grid; gap: var(--gap); }
 
-/* The chosen preset: a thicker frame and a tick, so it is not shown by colour alone. */
+/* The chosen preset: a thick bar along its bottom edge and a tick, so it is not shown by
+ * colour alone. It is deliberately not a frame: keyboard focus (base.css) is already a
+ * frame in the same accent colour, and the two must not look alike. */
 .drift-preset[aria-pressed="true"] {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--surface);
+  box-shadow: inset 0 -4px 0 var(--accent);
 }
 .drift-preset[aria-pressed="true"] .drift-name::after { content: " ✓"; }
 
@@ -24,15 +26,24 @@
 
 /* --------------------------------------------------------------- the picture */
 
-/* The box around the canvas. The stir ring is placed inside it.
- * max-width ties the width to the window height, so the whole picture stays on screen
- * on a short laptop display. How to read it: 270px is roughly the room everything else
- * on the page needs, what is left of the window height is the picture's height, and
- * 16 / 9 turns that height into a width (the wide canvas is 960 x 540 = 16:9, see main.js). */
+/* The box around the canvas. The stir ring is placed inside it. overflow: hidden cuts the
+ * ring off at the picture's edge, so stirring near an edge never makes the page scroll sideways. */
 .drift-stage {
   position: relative;
-  width: 100%; max-width: max(320px, calc((100vh - 270px) * 16 / 9));
+  width: 100%;
   margin: 0 auto;
+  overflow: hidden;
+  border-radius: var(--radius);   /* the same rounded corners as the canvas */
+}
+
+/* On a window tall enough to hold everything, tie the picture's width to the window height
+ * so the whole picture stays on screen on a laptop. How to read it: 320px is roughly the
+ * room everything else on the page needs, what is left of the window height is the
+ * picture's height, and 16 / 9 turns that height into a width (the wide canvas is
+ * 960 x 540 = 16:9, see main.js). On a shorter window (a phone held sideways) nothing can
+ * fit, so the picture keeps its full width and the page scrolls instead. */
+@media (min-height: 560px) {
+  .drift-stage { max-width: max(320px, calc((100vh - 320px) * 16 / 9)); }
 }
 .drift-canvas { cursor: crosshair; }
 
@@ -45,11 +56,15 @@
   pointer-events: none;
 }
 
-/* ------------------------------------------------------- the line underneath */
+/* ------------------------------------------- the message and the line underneath */
 
-.drift-status { justify-content: space-between; min-height: 24px; }
+/* The message between the buttons and the picture. min-height keeps one line's room even
+ * when it is empty, so the picture does not jump down when a message appears. */
+.drift-said { min-height: 24px; color: var(--good); font-weight: 600; }
+.drift-said-bad { color: var(--bad); }   /* something went wrong, e.g. saving failed */
+
+.drift-status { min-height: 24px; }
 .drift-info { font-size: 13px; }
-.drift-said { color: var(--good); font-weight: 600; }
 
 /* ------------------------------------------------------------ narrow screens */
 
@@ -57,6 +72,6 @@
   /* Buttons share each row evenly, and the key hints go: phones have no keyboard. */
   .drift-controls .row { gap: 8px; }
   .drift-controls .btn { flex: 1 1 auto; padding: 8px 10px; }
-  .drift-controls .kbd { display: none; }
+  .drift-controls .kbd, .drift-keys-hint { display: none; }
   .drift-stage { max-width: none; }   /* the narrow canvas is taller than wide; let the page scroll */
 }

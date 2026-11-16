@@ -8,17 +8,24 @@ import { test, assert } from './harness.js';
 import { presets } from '../site/games/drift/presets.js';
 import {
   createRandom, validatePreset, particleCount, createWorld, fieldAngle, step,
-  MAX_PARTICLES, MIN_PARTICLES, EDGE_MARGIN, STIR_RADIUS, MAX_PUSH, LIMITS,
+  MAX_PARTICLES, MIN_PARTICLES, EDGE_MARGIN, STIR_RADIUS, MAX_PUSH, LIMITS, MIN_FADE,
 } from '../site/games/drift/logic.js';
 
 const WIDTH = 960;
 const HEIGHT = 540;   // 960 x 540 is the large canvas the page uses
 const SEED = 12345;
-const LONG_RUN = 1000;   // steps, as the spec asks
+const LONG_RUN = 1000;   // steps: long enough to catch a slow drift into broken numbers
 
-// A copy of the first preset with some fields replaced: handy for rule cases.
+// A fixed, valid preset for the rule cases below. It lives here, not in presets.js, so
+// reordering or retuning the real presets never breaks these tests.
+const BASE = {
+  id: 'base', name: 'Base', background: '#000000', palette: ['#ffffff', '#888888'],
+  particles: 600, speed: 1.2, fade: 0.06, swirl: 0.004, shift: 0.002, orbit: 0, snap: 0, life: 220, width: 1.2,
+};
+
+// A copy of BASE with some fields replaced: handy for rule cases.
 function presetWith(changes) {
-  return { ...presets[0], ...changes };
+  return { ...BASE, ...changes };
 }
 
 // Run a world forward. `stirAt(i)` may return a stir for step i, or null.
@@ -94,6 +101,10 @@ for (const preset of presets) {
   });
 }
 
+test('the test fixture BASE is itself a valid preset', () => {
+  assert.deepEqual(validatePreset(BASE), []);
+});
+
 test('a preset with a missing or out-of-range field is rejected, and the message names the field', () => {
   assert.ok(validatePreset(presetWith({ speed: 0 })).join().includes('speed'));
   assert.ok(validatePreset(presetWith({ fade: 2 })).join().includes('fade'));
@@ -112,6 +123,19 @@ test('colours must be written #rrggbb', () => {
   assert.ok(validatePreset(presetWith({ palette: [] })).join().includes('palette'));
   assert.ok(validatePreset(presetWith({ palette: ['#12345g'] })).join().includes('palette'));
   assert.ok(validatePreset(presetWith({ palette: new Array(7).fill('#ffffff') })).join().includes('palette'));
+  // A double comma leaves an empty slot in the list; that colour would never be drawn.
+  assert.ok(validatePreset(presetWith({ palette: ['#ffffff', , '#888888'] })).join().includes('palette'));
+});
+
+test('fade is 0 or at least MIN_FADE: small fades leave strong ghosts', () => {
+  assert.deepEqual(validatePreset(presetWith({ fade: 0 })), []);
+  assert.deepEqual(validatePreset(presetWith({ fade: MIN_FADE })), []);
+  assert.ok(validatePreset(presetWith({ fade: 0.01 })).join().includes('fade'));
+});
+
+test('particles below MIN_PARTICLES are rejected, not silently raised', () => {
+  assert.deepEqual(validatePreset(presetWith({ particles: MIN_PARTICLES })), []);
+  assert.ok(validatePreset(presetWith({ particles: MIN_PARTICLES - 1 })).join().includes('particles'));
 });
 
 test('snap is 0 or a whole number of directions', () => {
@@ -122,8 +146,18 @@ test('snap is 0 or a whole number of directions', () => {
   assert.ok(validatePreset(presetWith({ snap: 99 })).join().includes('snap'));
 });
 
-test('the limits table covers every number the header of presets.js describes', () => {
-  assert.deepEqual(Object.keys(LIMITS).sort(), ['fade', 'life', 'orbit', 'particles', 'shift', 'speed', 'swirl', 'width']);
+test('LIMITS has exactly these ranges (change this test and the presets.js header together)', () => {
+  assert.deepEqual(LIMITS, {
+    particles: [40, 1200],
+    speed: [0.2, 4],
+    fade: [0, 0.5],
+    swirl: [0.0005, 0.05],
+    shift: [0, 0.02],
+    orbit: [0, 1],
+    life: [20, 2000],
+    width: [0.5, 4],
+  });
+  assert.equal(MIN_FADE, 0.03);
 });
 
 // ---------------------------------------------------------------- seeded random numbers
@@ -164,8 +198,8 @@ test('a seed that is not a tidy whole number still works', () => {
 // ---------------------------------------------------------------- building a world
 
 test('a different seed gives a different picture', () => {
-  const first = createWorld(presets[0], WIDTH, HEIGHT, 1);
-  const second = createWorld(presets[0], WIDTH, HEIGHT, 2);
+  const first = createWorld(BASE, WIDTH, HEIGHT, 1);
+  const second = createWorld(BASE, WIDTH, HEIGHT, 2);
   assert.ok(first.particles[0].x !== second.particles[0].x);
   assert.ok(fieldAngle(first.field, 100, 100, 0) !== fieldAngle(second.field, 100, 100, 0));
 });
@@ -186,14 +220,19 @@ test('the particle count is capped, however big the canvas', () => {
 });
 
 test('a tiny canvas still gets a few particles', () => {
-  assert.equal(particleCount(presetWith({ particles: 20 }), 100, 100), MIN_PARTICLES);
+  assert.equal(particleCount(presetWith({ particles: MIN_PARTICLES }), 100, 100), MIN_PARTICLES);
 });
 
 test('particles start inside the canvas', () => {
-  const world = createWorld(presets[0], 300, 200, SEED);
+  const world = createWorld(BASE, 300, 200, SEED);
   for (const particle of world.particles) {
     assert.ok(particle.x >= 0 && particle.x <= 300 && particle.y >= 0 && particle.y <= 200);
   }
+});
+
+test('particles start part-way through their lives, so they do not all restart together', () => {
+  const ages = createWorld(BASE, WIDTH, HEIGHT, SEED).particles.map((p) => p.age);
+  assert.ok(new Set(ages).size > 1, 'every particle starts at the same age');
 });
 
 // ---------------------------------------------------------------- the flow and the step
@@ -267,7 +306,7 @@ test('a push dies away once the stirring stops', () => {
 });
 
 test('a broken stir is ignored instead of spreading broken numbers', () => {
-  const world = createWorld(presets[0], WIDTH, HEIGHT, SEED);
+  const world = createWorld(BASE, WIDTH, HEIGHT, SEED);
   step(world, { x: NaN, y: 10, dx: 5, dy: 5 });
   step(world, { x: 10, y: 10, dx: Infinity, dy: 0 });
   step(world, {});
@@ -275,11 +314,37 @@ test('a broken stir is ignored instead of spreading broken numbers', () => {
 });
 
 test('stirring changes the picture, but only through the stir', () => {
-  const calm = run(createWorld(presets[0], WIDTH, HEIGHT, SEED), 50);
-  const stirred = run(createWorld(presets[0], WIDTH, HEIGHT, SEED), 50, roughStir);
+  const calm = run(createWorld(BASE, WIDTH, HEIGHT, SEED), 50);
+  const stirred = run(createWorld(BASE, WIDTH, HEIGHT, SEED), 50, roughStir);
   let different = 0;
   for (let i = 0; i < calm.particles.length; i += 1) {
     if (calm.particles[i].x !== stirred.particles[i].x) different += 1;
   }
   assert.ok(different > 0);
+});
+
+test('a particle restarts once it is older than its life', () => {
+  // Slow particles with short lives: almost none can leave the canvas, so restarts come from age.
+  const world = createWorld(presetWith({ life: 20, speed: 0.2 }), WIDTH, HEIGHT, SEED);
+  let restarts = 0;
+  for (let i = 0; i < 31; i += 1) {   // 31 steps: longer than the longest life (1.5 x 20)
+    step(world, null);
+    for (const particle of world.particles) {
+      assert.ok(particle.age <= particle.life, `age ${particle.age} is past life ${particle.life}`);
+      if (particle.age === 0) restarts += 1;
+    }
+  }
+  assert.ok(restarts > 0, 'no particle restarted');
+});
+
+test('a particle that restarts loses its push', () => {
+  const world = createWorld(presetWith({ life: 2000 }), WIDTH, HEIGHT, SEED);
+  step(world, { x: 480, y: 270, dx: 50, dy: 50 });
+  const pushed = world.particles.find((p) => p.pushX !== 0);
+  assert.ok(pushed, 'the stir pushed nothing');
+  pushed.age = pushed.life;   // the next step makes it too old, so it restarts
+  step(world, null);
+  assert.equal(pushed.age, 0);
+  assert.equal(pushed.pushX, 0);
+  assert.equal(pushed.pushY, 0);
 });

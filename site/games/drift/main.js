@@ -29,7 +29,8 @@ const MAX_STEPS_PER_FRAME = 2;                      // after a hiccup, catch up 
 const WARM_UP_STEPS = 180;                          // steps drawn at once, so a new picture never starts blank
 const KEY_STIR = 28;                                // how far one arrow-key press moves the stir ring
 const RING_HIDE_MS = 900;                           // the ring stays this long after the last arrow key
-const SEED_LIMIT = 100000;                          // seeds run from 0 to one less than this
+const SEED_LIMIT = 100000;                          // random seeds run from 0 to one less than this
+const GENERATOR_RANGE = 2 ** 32;                    // createRandom (logic.js) only uses a seed modulo this
 const DOWNLOAD_CLEANUP_MS = 10000;                  // a saved picture's temporary link is released after this long
 const KEY_PRESETS = 9;                              // keys 1 to 9 pick the first nine presets
 const ARROWS = {                                    // arrow key -> direction [x, y]
@@ -54,7 +55,8 @@ let lastFrameTime = 0;
 let owedMs = 0;           // time that has passed but has not been turned into steps yet
 
 // Where the player is stirring, and how far they moved since the last step.
-const stir = { x: 0, y: 0, dx: 0, dy: 0, dragging: false };
+// pointerId is the finger (or mouse or pen) doing the stirring; other fingers are ignored.
+const stir = { x: 0, y: 0, dx: 0, dy: 0, dragging: false, pointerId: null };
 let ringTimer = 0;
 
 // ---------------------------------------------------------------- actions
@@ -67,9 +69,11 @@ function randomSeed() {
   return Math.floor(Math.random() * SEED_LIMIT);
 }
 
-// Show a short message under the picture. Screen readers read it out too.
-function say(message) {
+// Show a short message just above the picture. Screen readers read it out too.
+// Pass isProblem = true when something went wrong: it is then shown in the "bad" colour.
+function say(message, isProblem = false) {
   view.said.textContent = message;
+  view.said.classList.toggle('drift-said-bad', isProblem);
 }
 
 function choosePreset(index) {
@@ -77,7 +81,9 @@ function choosePreset(index) {
   save(SAVE_KEY, currentPreset().id);
   seed = randomSeed();
   startPicture();
-  say(`${currentPreset().name}: a new pattern.`);
+  // A preset that never fades fills up over time, so say how to start again.
+  const hint = currentPreset().fade === 0 ? ' Lines never fade here: press Clear to start again.' : '';
+  say(`${currentPreset().name}: a new pattern.${hint}`);
 }
 
 function newPattern() {
@@ -104,18 +110,19 @@ function savePng() {
   const name = `drift-${currentPreset().id}-${seed}.png`;
   view.canvas.toBlob((blob) => {
     if (!blob) {
-      say('Sorry, this browser could not save the picture.');
+      say('Sorry, this browser could not save the picture.', true);
       return;
     }
     const url = URL.createObjectURL(blob);
     el('a', { href: url, download: name }).click();   // a link that is "clicked" to start the download
     setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_CLEANUP_MS);
-    say(`Saved as ${name}`);
+    say(`Saving as ${name} ...`);   // "Saving", not "Saved": the page cannot tell if the browser did
   }, 'image/png');
 }
 
 function onKey(event) {
   if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (typeof event.key !== 'string') return;   // some odd keyboards and tools send no key name
   const key = event.key.toLowerCase();
   // A held-down key repeats. That is wanted for stirring, but not for saving twenty pictures.
   if (event.repeat && !ARROWS[key]) return;
@@ -149,18 +156,28 @@ function remindIfPaused() {
 
 function onPointerDown(event) {
   if (event.button !== 0) return;   // left mouse button, a finger or a pen; not a right-click
+  // A second finger while the first is still stirring is not "primary": ignore it.
+  // (A new primary pointer means the old one is gone, so that one may take over.)
+  if (stir.dragging && !event.isPrimary) return;
   const spot = pointerPos(event, view.canvas);
   stir.x = spot.x;
   stir.y = spot.y;
   stir.dragging = true;
-  view.canvas.setPointerCapture(event.pointerId);   // keep getting moves even if the pointer leaves the canvas
+  stir.pointerId = event.pointerId;
+  // Keep getting moves even if the pointer leaves the canvas. The drag works without it,
+  // so if the browser refuses (it can, for a pointer it no longer tracks), just carry on.
+  try {
+    view.canvas.setPointerCapture(event.pointerId);
+  } catch {
+    // no capture: moves outside the canvas are simply missed
+  }
   clearTimeout(ringTimer);
   showRing();
   remindIfPaused();
 }
 
 function onPointerMove(event) {
-  if (!stir.dragging) return;
+  if (!stir.dragging || event.pointerId !== stir.pointerId) return;   // only the stirring finger
   const spot = pointerPos(event, view.canvas);
   if (!paused) {
     stir.dx += spot.x - stir.x;
@@ -171,8 +188,10 @@ function onPointerMove(event) {
   showRing();
 }
 
-function onPointerUp() {
+function onPointerUp(event) {
+  if (event.pointerId !== stir.pointerId) return;   // another finger lifted: keep stirring
   stir.dragging = false;
+  stir.pointerId = null;
   hideRing();
 }
 
@@ -248,8 +267,12 @@ function startPicture() {
   ctx = fitCanvas(view.canvas, size.width, size.height);
   ctx.lineCap = 'round';
   world = createWorld(currentPreset(), size.width, size.height, seed);
-  stir.x = size.width / 2;
-  stir.y = size.height / 2;
+  // The arrow keys start from the middle. Mid-drag, keep the finger's spot, or the next
+  // move would count the jump from the middle to the finger as one big stir.
+  if (!stir.dragging) {
+    stir.x = size.width / 2;
+    stir.y = size.height / 2;
+  }
   stir.dx = 0;
   stir.dy = 0;
   wipe();
@@ -265,7 +288,7 @@ function updateControls() {
   });
   view.pauseLabel.textContent = paused ? 'Play' : 'Pause';
   view.pause.classList.toggle('btn-primary', paused);
-  view.info.textContent = `${preset.name} · seed ${seed} · ${world.particles.length} particles`;
+  view.info.textContent = `${preset.name} · pattern ${seed} · ${world.particles.length} particles`;
 }
 
 // ---------------------------------------------------------------- the loop
@@ -302,6 +325,8 @@ function kbd(text) {
 }
 
 function presetButton(preset, index) {
+  // The swatch is a gradient through the palette. The first colour is added again at the
+  // end, so a one-colour palette still gives two stops (a gradient needs at least two).
   const swatch = el('span', {
     class: 'drift-swatch', 'aria-hidden': 'true',
     style: { background: `linear-gradient(135deg, ${[...preset.palette, preset.palette[0]].join(', ')})` },
@@ -314,7 +339,7 @@ function presetButton(preset, index) {
 
 // Runs once: creates every element and puts it on the page.
 function build() {
-  view.presets = el('div', { class: 'row', role: 'group', 'aria-label': 'Presets' }, presets.map(presetButton));
+  view.presets = el('div', { class: 'row', role: 'group', 'aria-label': 'Styles' }, presets.map(presetButton));
   view.pauseLabel = el('span', {}, 'Pause');
   view.pause = el('button', { class: 'btn', type: 'button', onclick: togglePause }, view.pauseLabel, kbd('P'));
   view.canvas = el('canvas', {
@@ -326,19 +351,23 @@ function build() {
   view.info = el('p', { class: 'muted mono drift-info' });
   view.said = el('p', { class: 'drift-said', role: 'status' });
 
+  // Order on the page: how-to line, buttons, message, picture, info line. The message sits
+  // between the buttons and the picture so it stays on screen on a phone.
   main.append(
     el('p', { class: 'how' },
-      'Drag across the picture to stir the drifting particles, or use the arrow keys. Pick a preset to change the mood.'),
+      'Drag across the picture to stir the drifting particles',
+      el('span', { class: 'drift-keys-hint' }, ', or use the arrow keys'),   // hidden on phones
+      '. Pick a style to change the mood.'),
     el('div', { class: 'drift-controls' },
       view.presets,
       el('div', { class: 'row', role: 'group', 'aria-label': 'Actions' },
         view.pause,
         el('button', { class: 'btn', type: 'button', onclick: clearTrails }, 'Clear', kbd('C')),
-        el('button', { class: 'btn', type: 'button', title: 'New pattern: same preset, different seed', onclick: newPattern },
-          'New', kbd('N')),
-        el('button', { class: 'btn', type: 'button', onclick: savePng }, 'Save PNG', kbd('S')))),
+        el('button', { class: 'btn', type: 'button', onclick: newPattern }, 'New pattern', kbd('N')),
+        el('button', { class: 'btn', type: 'button', onclick: savePng }, 'Save picture', kbd('S')))),
+    view.said,
     el('div', { class: 'drift-stage' }, view.canvas, view.ring),
-    el('div', { class: 'row drift-status' }, view.info, view.said),
+    el('div', { class: 'row drift-status' }, view.info),
   );
 }
 
@@ -361,10 +390,12 @@ function savedPresetIndex() {
 }
 
 // ?seed=123 in the URL gives that pattern; otherwise pick one at random.
+// Only plain digits count ("", "1e3" and "0x10" get a random pattern). The number is folded
+// into the generator's range, so the info line and the file name match the picture drawn.
 function firstSeed() {
   const asked = new URLSearchParams(location.search).get('seed');
-  const number = Number(asked);
-  return asked !== null && Number.isInteger(number) && number >= 0 ? number : randomSeed();
+  if (asked === null || !/^\d+$/.test(asked)) return randomSeed();
+  return Number(asked) % GENERATOR_RANGE;
 }
 
 checkPresets();

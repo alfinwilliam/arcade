@@ -6,20 +6,31 @@
 // particle follows the wind and leaves a thin line behind it. The numbers below shape the wind
 // and the lines.
 //
+// Units used below:
+//   - One "step" is 1/60 of a second (the page runs 60 steps a second), so life 60 is about a second.
+//   - Distances are in picture units: the picture is 960 x 540 on a large screen and 400 x 500
+//     on a phone, whatever its size on the screen.
+//
 // Schema (every field is required; the allowed range is in brackets):
 //   id          unique text, lowercase letters, digits and dashes. Saved as the player's last choice.
 //   name        the label on the preset button. Keep it short: one word fits best.
 //   background  canvas colour, written "#rrggbb"
-//   palette     1 to 6 line colours, each "#rrggbb". Every particle picks one at random.
-//   particles   how many particles on a large screen [20 to 1200]. Small screens get fewer
+//   palette     1 to 6 line colours, each "#rrggbb" (no empty slots, so no double commas).
+//               Every particle picks one at random.
+//   particles   how many particles on a large screen [40 to 1200]. Small screens get fewer
 //               automatically (see particleCount in logic.js), so phones stay smooth.
 //   speed       how far a particle moves per step [0.2 to 4]. Higher = longer, faster strokes.
-//   fade        how quickly old lines fade away [0 to 0.5]. 0 = never fade, the picture just
-//               builds up. 0.03 = long trails. 0.1 = short comets. Values between 0 and 0.03
-//               leave faint grey ghosts behind, so use 0 or at least 0.03.
+//   fade        how quickly old lines fade away [0, or 0.03 to 0.5]. 0 = never fade: the picture
+//               builds up until the player presses Clear, so keep `particles` low (see Ink).
+//               0.03 = long trails. 0.1 = short comets.
+//               Fading works in whole colour steps, so it never gets all the way back to the
+//               background: old lines leave a faint permanent tint, and the canvas settles a
+//               little off the background colour. The SMALLER the fade, the STRONGER that tint
+//               (roughly 0.5 / fade colour steps, so about 17 at 0.03 and 5 at 0.1). Below 0.03
+//               it is strong enough to change the background colour, so the check rejects it.
 //   swirl       how tightly the flow curls [0.0005 to 0.05]. 0.002 = a few big lazy curves,
 //               0.01 = many small eddies.
-//   shift       how fast the flow itself changes over time [0 to 0.02]. 0 = frozen, so lines
+//   shift       how fast the flow itself changes, per step [0 to 0.02]. 0 = frozen, so lines
 //               pile up on the same paths. 0.004 = slowly wandering.
 //   orbit       how much the flow circles the middle of the canvas [0 to 1]. 0 = not at all,
 //               1 = a plain whirlpool.
@@ -27,12 +38,14 @@
 //               directions. 4 gives right-angle "circuit" lines, 6 gives a honeycomb feel.
 //   life        how many steps a particle lives before it restarts somewhere new [20 to 2000].
 //               Short lives give short dashes spread evenly; long lives give long ribbons.
-//   width       line thickness [0.5 to 4]
+//   width       line thickness, in picture units [0.5 to 4]
 //
 // To add a preset: copy an entry, give it a new id and name, change the numbers, save, and
-// reload the page. Then run `python3 scripts/arcade.py test drift`: it checks every entry
-// against the ranges above and tells you which field is wrong. Keys 1 to 9 pick the first
-// nine presets, in the order they appear here. The first entry is the one a new visitor sees.
+// reload the page. A wrong value shows a red banner on the page naming the entry and the
+// field. Then run `python3 scripts/arcade.py test drift`: it checks every entry against the
+// ranges above. Keys 1 to 9 pick the first nine presets, in the order they appear here.
+// The first entry is the one a new visitor sees. More than about six presets wrap onto a
+// second row of buttons.
 
 export const presets = [
   {
@@ -58,6 +71,8 @@ export const presets = [
   {
     id: 'ink', name: 'Ink', background: '#f3ead8',
     palette: ['#1f2a44', '#7a1f2b', '#2f5d50'],
-    particles: 300, speed: 1, fade: 0, swirl: 0.003, shift: 0, orbit: 0.2, snap: 0, life: 320, width: 0.7,
+    // fade 0: lines never fade, so the paper fills up. 100 particles (it was 300) keep it
+    // airy for longer; the page also says "press Clear to start again" when Ink is picked.
+    particles: 100, speed: 1, fade: 0, swirl: 0.003, shift: 0, orbit: 0.2, snap: 0, life: 320, width: 0.7,
   },
 ];
