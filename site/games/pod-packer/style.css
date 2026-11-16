@@ -1,0 +1,201 @@
+/* Styles for Pod Packer only. Shared pieces (.btn, .panel, .row, .kbd ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours.
+ *
+ * A pod's colour arrives as the CSS variable --pod, set by main.js (podColour). */
+
+:root { --accent: var(--accent-2); }   /* this game's accent colour: accent-1 to accent-6 */
+
+/* ------------------------------------------------- title row, turns and hint */
+
+.pp-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.pp-turn { display: flex; align-items: center; gap: 8px; color: var(--muted); font: 600 14px var(--mono); }
+.pp-pips { display: inline-flex; gap: 4px; }
+.pp-pip { width: 16px; height: 8px; border: 1px solid var(--line); border-radius: 4px; }
+.pp-pip-done { background: var(--muted); border-color: var(--muted); }
+.pp-pip-now { background: var(--accent); border-color: var(--accent); }
+.pp-hint { padding-left: 10px; border-left: 3px solid var(--accent); }
+
+/* ------------------------------------------------------------ the bill meter */
+
+.pp-bill { display: grid; gap: 4px; }
+.pp-bill-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 16px; }
+.pp-bill-now { font: 700 26px var(--mono); }
+.pp-bill-add { color: var(--muted); font: 600 13px var(--mono); }
+.pp-bill-goal { font-size: 13px; }
+.pp-over { color: var(--bad); }
+
+.pp-meter {
+  position: relative; display: flex; height: 18px; overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 999px;
+}
+.pp-meter-paid { background: var(--accent); transition: width 300ms; }
+/* Striped: what ending this turn will add. */
+.pp-meter-next {
+  background: repeating-linear-gradient(135deg, var(--accent) 0 4px, transparent 4px 8px);
+  transition: width 300ms;
+}
+.pp-meter-next.pp-over { background: repeating-linear-gradient(135deg, var(--bad) 0 4px, transparent 4px 8px); }
+/* The line to stay left of for three stars. */
+.pp-meter-mark { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -3px; background: var(--warn); }
+
+.pp-notice {
+  padding: 8px 12px;
+  border: 1px dashed var(--warn); border-radius: var(--radius);
+  color: var(--warn); font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ the board */
+
+.pp-board { display: grid; gap: 16px; }
+@media (min-width: 760px) {
+  .pp-board { grid-template-columns: 300px 1fr; align-items: start; }
+}
+
+.pp-empty {
+  grid-column: 1 / -1; padding: 12px;
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  color: var(--muted);
+}
+.pp-next { font-size: 14px; }
+
+.pp-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.pp-tag {
+  padding: 0 6px;
+  border: 1px solid var(--line); border-radius: 999px;
+  color: var(--muted); font: 600 11px/1.7 var(--mono); white-space: nowrap;
+}
+.pp-tag-pod { border-left: 4px solid var(--pod); border-radius: 4px; color: var(--text); }
+
+/* ------------------------------------------------------------- pending pods */
+
+.pp-tray { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); }
+.pp-pod {
+  display: grid; gap: 4px; align-content: start;
+  min-height: var(--tap); padding: 8px;
+  border: 1px solid var(--line); border-left: 6px solid var(--pod); border-radius: var(--radius);
+  background: var(--surface-2); text-align: left; cursor: pointer;
+}
+.pp-pod:hover { border-color: var(--pod); }
+.pp-pod:disabled { opacity: 0.5; cursor: not-allowed; }
+.pp-pod[aria-pressed="true"] { border-color: var(--pod); box-shadow: 0 0 0 2px var(--pod); }
+.pp-pod-name { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 6px; font: 700 14px var(--mono); white-space: nowrap; }
+.pp-picked { color: var(--muted); font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* The two small bars on a pod: its CPU and memory next to the largest node on sale. */
+.pp-size {
+  display: grid; grid-template-columns: 28px 1fr 40px; align-items: center; gap: 6px;
+  color: var(--muted); font: 600 11px var(--mono);
+}
+.pp-size-track { height: 8px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; }
+.pp-size-fill { display: block; height: 100%; background: var(--pod); }
+
+/* -------------------------------------------------------------------- nodes */
+
+.pp-nodes { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.pp-node {
+  display: grid; overflow: hidden;
+  border: 2px solid var(--line); border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.pp-node:hover { border-color: var(--muted); }
+.pp-node-main {
+  display: grid; gap: 6px; width: 100%; padding: 10px;
+  border: 0; background: transparent; text-align: left; cursor: pointer;
+}
+.pp-node-main:disabled { cursor: default; }
+.pp-node-main:focus-visible { outline-offset: -3px; }
+.pp-node-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-family: var(--mono); }
+.pp-node-price { color: var(--muted); font-weight: 600; }
+
+.pp-badge { padding: 0 8px; border-radius: 999px; font: 700 11px/1.8 var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
+.pp-badge-packed { background: var(--good); color: var(--on-accent); }
+.pp-badge-doomed { border: 1px dashed var(--warn); color: var(--warn); }
+
+/* One usage row: name, bar, what is free. */
+.pp-use {
+  display: grid; grid-template-columns: 30px 1fr 62px; align-items: center; gap: 6px;
+  color: var(--muted); font: 600 12px var(--mono);
+}
+.pp-use-free { text-align: right; }
+.pp-bar { display: flex; height: 24px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+.pp-seg {
+  flex: none; overflow: hidden; padding: 0 4px;
+  border-right: 2px solid var(--bg);
+  background: var(--pod); color: var(--on-accent);
+  font: 600 11px/22px var(--mono); white-space: nowrap;
+}
+.pp-seg-ghost { border: 2px dashed var(--pod); background: transparent; color: var(--text); line-height: 18px; }
+.pp-seg-new { animation: pp-grow 260ms ease-out; transform-origin: left center; }
+
+.pp-verdict { min-height: 18px; font: 600 12px/1.5 var(--mono); }
+.pp-yes { color: var(--good); }
+.pp-no { color: var(--muted); }
+
+.pp-node-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6px 10px; border-top: 1px solid var(--line);
+}
+.pp-drain { min-height: var(--tap); padding: 4px 12px; font-size: 14px; }
+
+/* Node states. Each also has words on the card, so colour is never the only signal. */
+.pp-fit { border-style: dashed; border-color: var(--accent); }
+.pp-doomed { border-style: dashed; border-color: var(--warn); }
+.pp-packed { border-color: var(--good); box-shadow: 0 0 18px -6px var(--good); }
+.pp-flash-good { animation: pp-pop 260ms ease-out; }
+.pp-flash-new { animation: pp-pop 260ms ease-out; }
+.pp-flash-bad { animation: pp-shake 260ms ease-in-out; }
+
+@keyframes pp-pop {
+  0% { transform: scale(0.97); }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+@keyframes pp-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+@keyframes pp-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* --------------------------------------------------------------------- shop */
+
+.pp-shop { display: flex; flex-wrap: wrap; gap: 8px; }
+.pp-buy { flex: 1 1 200px; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; text-align: left; }
+.pp-buy-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.pp-buy-facts { color: var(--muted); font: 600 12px var(--mono); }
+.pp-armed .pp-buy { border-color: var(--accent); border-style: dashed; }
+
+/* ------------------------------------------- message line and action buttons */
+
+/* Sticks to the bottom of the screen so the feedback line and End turn are always in reach. */
+.pp-actions {
+  position: sticky; bottom: 0; z-index: 1;
+  display: grid; gap: 6px;
+  margin: 0 -16px -16px; padding: 10px 16px 12px;
+  border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface);
+}
+.pp-message { min-height: 24px; font-weight: 600; }
+.pp-message-good { color: var(--good); }
+.pp-message-bad { color: var(--bad); }
+.pp-keys { font-size: 13px; }
+
+@media (max-width: 520px) {
+  .pp-actions .kbd, .pp-keys { display: none; }   /* no keyboard on a phone: save the room */
+  .level-chip { padding: 4px 6px; }               /* so that six level buttons fit on one row */
+  .pp-actions .btn { padding: 8px 12px; }         /* so that the three action buttons fit on one row */
+}
+
+/* ---------------------------------------------------------------- win screen */
+
+.pp-stars { color: var(--warn); font-size: 40px; line-height: 1; letter-spacing: 6px; }
+.pp-won .pp-stars { animation: pp-pop 500ms ease-out; }
+.pp-lesson {
+  padding: 10px 12px;
+  border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius);
+  background: var(--surface-2);
+}
