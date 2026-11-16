@@ -336,7 +336,8 @@ export function trace(level, fixIds) {
 // The inputs a player can give, as plain text. A level's `solution` is a list of them.
 //   'send'             send the packet with the fixes chosen so far
 //   'hint'             reveal the next hint
-//   'inspect:<hopId>'  look inside a hop
+//   'inspect:<hopId>'  look inside a hop (free; in a fog level it shows what that hop did
+//                      with the last packet, until the next Send)
 //   'undo:<hopId>'     put a hop back the way it was
 //   '<fixId>'          choose that fix for its hop (it replaces any other fix on the same hop)
 
@@ -345,7 +346,7 @@ export function start(level) {
   return {
     level,
     fixes: {},        // { hopId: fixId }: at most one fix per hop
-    inspected: [],    // ids of the hops the player has looked inside
+    inspected: [],    // ids of the hops looked inside since the last Send (fog levels show only these)
     hints: 0,         // how many hints have been revealed
     charged: [],      // wrong fixes that have already cost a star
     sends: 0,         // how many times Send was pressed
@@ -378,6 +379,9 @@ function send(state) {
   return {
     ...state,
     result,
+    // A new packet: in a fog level the player has seen none of its hops yet. Without this,
+    // opening every hop once (even before the first Send) would lift the fog for good.
+    inspected: [],
     sends: state.sends + 1,
     charged: [...state.charged, ...newlyWrong],
     status: result.delivered ? 'won' : 'playing',

@@ -10,7 +10,8 @@
 //   id        unique text, starting "pq-"
 //   title     shown above the level
 //   fog       false: the page shows where the packet stopped.
-//             true:  the page shows only what the client sees, until the player inspects hops.
+//             true:  the page shows only what the client sees. After each Send the player
+//                    opens hops one by one to see what each did with that packet.
 //   brief     one sentence: what the person reporting the problem says
 //   request   { from, host, port }  who is asking, for which name, on which port.
 //             Add fromPort (the client's own port) when the level has a reply hop.
@@ -18,7 +19,8 @@
 //   fixes     the changes the player can choose from. Each is
 //               { id, hop, label, set }
 //             `set` replaces whole fields of that hop, so write the complete new list
-//             (all the rules, all the routes), not only the added line.
+//             (all the rules, all the routes), not only the added line. It may only set
+//             fields the hop already has, plus `note` (the tests catch typos).
 //             A fix id is plain text with no ":" in it, and is not "send" or "hint".
 //   expect    { failsAt, symptom }  where the untouched level stops, and what the client
 //             sees: "nxdomain", "timeout" or "refused"
@@ -53,10 +55,13 @@
 // PUBLIC REPO: example values only. Names under example.com; addresses from 10.x.x.x
 // (private), 198.51.100.x and 203.0.113.x (reserved for documentation); sample-app.
 //
-// TO ADD A LEVEL: copy an entry, change it, and run `python3 scripts/arcade.py test packet-quest`.
+// TO ADD A LEVEL: copy an entry, paste it at the end of the list with a new id, change it,
+// and from the repo folder run `python3 scripts/arcade.py test packet-quest`.
 // The tests tell you if the level stops somewhere other than `expect` says, if the
-// solution does not win, or if a second fix would also win. To get `solution`, open the
-// game with ?dev on the end of the URL, win the level, and paste what it shows.
+// solution does not win, or if a second fix would also win. To get `solution`, run
+// `python3 scripts/arcade.py preview`, open http://127.0.0.1:8000/site/games/packet-quest/?dev,
+// win the level, and paste the "solution:" line it shows.
+// (Levels 1 to 8 teach in order: fog from 5, a reply from 6. Levels you add may be any mix.)
 
 export const levels = [
   // ------------------------------------------------------------ 1: DNS

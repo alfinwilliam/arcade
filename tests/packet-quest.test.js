@@ -15,8 +15,10 @@ import {
 // ------------------------------------------------------------------ helpers
 
 const SYMPTOMS = ['nxdomain', 'timeout', 'refused'];
-const FIRST_FOG_LEVEL = 5;      // levels from this number on hide where the packet stopped
-const FIRST_REPLY_LEVEL = 6;    // levels from this number on have a reply hop
+const SHIPPED_LEVELS = 8;       // the first eight levels teach in a fixed order (checked below)
+const FIRST_FOG_LEVEL = 5;      // of those, levels from this number on hide where the packet stopped
+const FIRST_REPLY_LEVEL = 6;    // of those, levels from this number on have a reply hop
+// Levels added after the eighth may use fog and a reply hop in any combination.
 
 // Addresses a public repo may contain: private 10.x, the two documentation ranges, and "anywhere".
 // Loopback and 0.0.0.0 appear in text about what a listening socket accepts.
@@ -87,9 +89,9 @@ function lastCode(result) {
 
 // ------------------------------------------------------- 1. every level
 
-test('there are eight levels and their ids are unique', () => {
+test('there are at least eight levels and their ids are unique', () => {
   const ids = levels.map((level) => level.id);
-  assert.equal(levels.length, 8);
+  assert.ok(levels.length >= SHIPPED_LEVELS, 'at least eight levels');
   assert.equal(new Set(ids).size, ids.length);
 });
 
@@ -106,7 +108,8 @@ levels.forEach((level, index) => {
     assert.ok(level.hints.length >= 1 && level.hints.length <= 2, 'one or two hints');
     assert.ok(SYMPTOMS.includes(level.expect.symptom), 'expect.symptom is a known symptom');
     assert.ok(level.request.from && level.request.host && level.request.port, 'request is complete');
-    assert.equal(level.fog, number >= FIRST_FOG_LEVEL, 'fog starts at level 5');
+    assert.equal(typeof level.fog, 'boolean', 'fog is true or false');
+    if (number <= SHIPPED_LEVELS) assert.equal(level.fog, number >= FIRST_FOG_LEVEL, 'fog starts at level 5');
   });
 
   test(`${level.id}: hops are well formed`, () => {
@@ -125,7 +128,7 @@ levels.forEach((level, index) => {
   });
 
   test(`${level.id}: levels 1 to 5 go one way, levels 6 to 8 have a reply`, () => {
-    assert.equal(hasReply, number >= FIRST_REPLY_LEVEL);
+    if (number <= SHIPPED_LEVELS) assert.equal(hasReply, number >= FIRST_REPLY_LEVEL);
     if (hasReply) assert.ok(level.request.fromPort > 1023, 'a reply level names the client port');
   });
 
@@ -448,10 +451,14 @@ test('state: hints stop at the number the level has', () => {
   assert.equal(state.hints, first.hints.length);
 });
 
-test('state: inspecting is free and remembered once', () => {
-  const state = replay(first, ['inspect:dns', 'inspect:web', 'inspect:dns', ...first.solution]);
-  assert.deepEqual(state.inspected, ['dns', 'web']);
-  assert.equal(stars(state), 3);
+test('state: inspecting is free, remembered once, and forgotten at the next Send', () => {
+  const looked = replay(first, ['send', 'inspect:dns', 'inspect:web', 'inspect:dns']);
+  assert.deepEqual(looked.inspected, ['dns', 'web']);
+  assert.equal(starsLeft(looked), 3);
+  // A new packet hides its hops again, so looking before a Send reveals nothing later.
+  assert.deepEqual(apply(looked, 'send').inspected, []);
+  assert.deepEqual(replay(first, ['inspect:dns', 'inspect:web', 'send']).inspected, []);
+  assert.equal(stars(replay(first, ['inspect:dns', ...first.solution])), 3);
 });
 
 test('state: stars are zero until the level is won', () => {

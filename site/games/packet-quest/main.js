@@ -90,11 +90,17 @@ function afterSend(before) {
   startTravel();
 }
 
-// Open or close a hop's panel. Looking inside is recorded as an input the first time,
-// because in fog levels it reveals what the hop did with the packet.
+// True when a fog level is hiding what this hop did with the last packet.
+function hiddenByFog(hopId) {
+  const result = state.result;
+  return Boolean(state.level.fog && result && !result.delivered && !state.inspected.includes(hopId));
+}
+
+// Open or close a hop's panel. In a fog level, opening a hop after a Send reveals what it
+// did with that packet, so it is recorded as an input (see logic.js, 'inspect:').
 function selectHop(hopId) {
   openHop = openHop === hopId ? null : hopId;
-  if (openHop && state.status === 'playing' && !state.inspected.includes(hopId)) press(`inspect:${hopId}`);
+  if (openHop && hiddenByFog(hopId)) press(`inspect:${hopId}`);
   else update();
 }
 
@@ -175,13 +181,19 @@ function arrive() {
     message = '';
   } else if (state.level.fog) {
     message += 'The packet did not arrive. Open the hops to find out where it stopped.';
+    // A panel left open while sending is a hop the player is looking at: reveal it.
+    if (openHop) press(`inspect:${openHop}`);
   } else {
     openHop = result.failsAt;
     message += `Stopped at ${hopName(result.failsAt)}. Its panel is open below.`;
   }
   update();
-  if (state.status === 'won') view.primary.focus();
-  else if (openHop) view.inspector.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+  if (state.status === 'won') {
+    // Show the win panel from its heading (the text is long on a phone), and put
+    // keyboard focus on Next without scrolling the heading away.
+    view.result.scrollIntoView({ block: 'start' });
+    view.primary.focus({ preventScroll: true });
+  } else if (openHop) view.inspector.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
 }
 
 // --------------------------------------------------------------------- 4. drawing
@@ -455,6 +467,7 @@ function describeHop(hop) {
 function verdictText(hopIndex) {
   const result = state.result;
   if (!result) return 'Press Send to see what this hop does with the packet.';
+  if (hiddenByFog(state.level.hops[hopIndex].id)) return 'Hidden by the fog.';
   const step = result.steps[hopIndex];
   return step ? step.text : 'The packet did not get this far.';
 }
@@ -488,7 +501,7 @@ function drawInspector() {
   put(view.inspector,
     el('div', { class: 'pq-inspector-head' },
       el('h3', {}, hop.name),
-      el('button', { class: 'btn btn-quiet', type: 'button', onclick: () => closeHop(hop.id) }, 'Close')),
+      el('button', { class: 'btn btn-quiet', type: 'button', dataset: { key: 'close' }, onclick: () => closeHop(hop.id) }, 'Close')),
     el('p', { class: 'muted' }, `${KIND_INFO[hop.kind].label}. ${KIND_INFO[hop.kind].does}`),
     el('div', {},
       el('p', { class: 'pq-label' }, heading),
