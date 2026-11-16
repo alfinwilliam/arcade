@@ -29,9 +29,12 @@ const NUDGE = 1;               // arrow keys and nudge buttons change the aim by
 const BIG_NUDGE = 10;          // ... and by this with Shift held
 const DRAG_SCALE = 1;          // dragging 1 field unit changes the aim by this much speed
 
-const PREVIEW_LENGTH = 150;    // the dotted preview covers this much path (field units) ...
-const PREVIEW_TICKS = 180;     // ... or this much time, whichever ends first
+// The dotted preview shows the start of the path, not all of it: the puzzle is guessing
+// how the planets bend the rest. Longer makes every level easier, shorter makes it harder.
+const PREVIEW_LENGTH = 240;    // the dotted preview covers this much path (field units) ...
+const PREVIEW_TICKS = 360;     // ... or this much time (3 s), whichever ends first
 const PREVIEW_GAP = 12;        // distance between preview dots
+const PREVIEW_DOT = 3;         // radius of each dot
 const ARROW_SCALE = 0.25;      // arrow length per unit of launch speed
 const SHIP_SIZE = 11;
 const TRAIL_EVERY = 2;         // remember the ship's position every 2 ticks
@@ -64,7 +67,9 @@ let recorded = { launch: null, brakes: [] };   // the inputs of this flight: wha
 let trail = [];         // where the ship has been on this flight, as [x, y] points
 let ghost = [];         // the trail of the flight before, drawn fainter
 let brakeMarks = [];    // where each brake tap happened
+let longestStay = 0;    // ring goals: the most ticks in a row spent inside the band on this flight
 let autoBrakes = [];    // ?dev "Fly the solution": the brake ticks still to come
+let devSolution = null; // ?dev: the launch "Find a forgiving launch" found on this level
 let drag = null;        // while dragging: { from: {x, y}, aim: [vx, vy] }
 let newBest = false;    // did the last win beat the saved time?
 
@@ -107,6 +112,7 @@ function doBrake() {
 function tick() {
   if (autoBrakes.includes(state.tick)) doBrake();
   state = step(state);
+  longestStay = Math.max(longestStay, ...state.held);   // held is 0 for zone goals
   if (state.tick % TRAIL_EVERY === 0 || state.status !== 'playing') trail.push([state.x, state.y]);
   if (state.status !== 'playing') endFlight();
 }
@@ -132,6 +138,7 @@ function resetFlight() {
   recorded = { launch: null, brakes: [] };
   trail = [];
   brakeMarks = [];
+  longestStay = 0;
   autoBrakes = [];
   view.result.hidden = true;
   refresh();
@@ -141,6 +148,7 @@ function openLevel(index, moveFocus) {
   levelIndex = index;
   trail = [];
   ghost = [];
+  devSolution = null;
   aim = levels[index].aim;
   state = start(levels[index]);
   resetFlight();
@@ -288,7 +296,10 @@ function build() {
   view.launch = el('button', { class: 'btn btn-primary so-wide', type: 'button', onclick: doLaunch }, 'Launch', kbd('Enter'));
   view.brake = el('button', { class: 'btn so-wide', type: 'button', onclick: doBrake }, 'Brake', kbd('Space'));
   view.reset = el('button', { class: 'btn btn-quiet so-reset', type: 'button', onclick: tryAgain }, 'Reset', kbd('R'));
-  view.nudges = el('div', { class: 'row so-nudges', role: 'group', 'aria-label': 'Fine aim: change the launch by 1' },
+  view.nudges = el('div', {
+    class: 'row so-nudges', role: 'group',
+    'aria-label': `Fine aim: change the launch by ${NUDGE}. The arrow keys do the same, and Shift with an arrow key changes it by ${BIG_NUDGE}.`,
+  },
     nudgeButton('←', 'left', -NUDGE, 0), nudgeButton('↑', 'up', 0, -NUDGE),
     nudgeButton('↓', 'down', 0, NUDGE), nudgeButton('→', 'right', NUDGE, 0));
   view.status = el('p', { class: 'so-status' });
@@ -348,15 +359,18 @@ function findLaunch() {
       view.devOut.textContent = 'No winning launch found. Make a target bigger or nearer, or raise maxSpeed or maxTicks.';
       return;
     }
+    devSolution = found.solution;
     view.devOut.textContent = `${solutionText(found.solution)}\n`
-      + `margin ${found.margin}: every launch within +-${found.margin} of it also wins (the tests need 2 or more).`;
+      + `margin ${found.margin}: every launch within +-${found.margin} of it also wins (the tests need 2 or more).\n`
+      + 'Press "Fly the solution" to watch it, then paste the line into levels.js.';
     setAim(found.solution.launch);
   }, 50);
 }
 
-// Flies the solution stored in levels.js, through the same inputs a player uses.
+// Flies the launch just found by "Find a forgiving launch", or else the solution stored
+// in levels.js, through the same inputs a player uses.
 function flySolution() {
-  const { solution } = state.level;
+  const solution = devSolution || state.level.solution;
   resetFlight();
   aim = clampLaunch(state.level, solution.launch);
   autoBrakes = [...solution.brakes];
@@ -394,7 +408,7 @@ function statusText() {
     const speed = Math.round(Math.sqrt(vx * vx + vy * vy));
     let text = `Aim ${vx < 0 ? '←' : '→'} ${Math.abs(vx)}  ${vy > 0 ? '↓' : '↑'} ${Math.abs(vy)} · speed ${speed} of ${level.maxSpeed}`;
     if (level.brake.taps > 0) text += ` · brakes ${level.brake.taps}`;
-    return text;
+    return `${text}\nArrow keys aim too; with Shift they move ${BIG_NUDGE} at a time.`;
   }
   const zones = level.goals.filter((goal) => goal.type === 'zone');
   const touched = level.goals.filter((goal, i) => goal.type === 'zone' && state.done[i]).length;
@@ -402,6 +416,20 @@ function statusText() {
   if (zones.length > 0) text += ` · targets ${touched} of ${zones.length}`;
   if (level.brake.taps > 0) text += ` · brakes left ${level.brake.taps - state.brakes.length}`;
   return text;
+}
+
+// After a miss: how far the flight got, so the player can see what to change.
+// e.g. "Targets touched: 1 of 1. Longest stay in the band: 2.5 of 4.0 s. Brakes used: 1 of 2."
+function progressText() {
+  const level = state.level;
+  const zones = level.goals.filter((goal) => goal.type === 'zone').length;
+  const touched = level.goals.filter((goal, i) => goal.type === 'zone' && state.done[i]).length;
+  const ring = level.goals.find((goal) => goal.type === 'ring');
+  const parts = [];
+  if (zones > 0) parts.push(`Targets touched: ${touched} of ${zones}.`);
+  if (ring) parts.push(`Longest stay in the band: ${seconds(Math.min(longestStay, ring.ticks))} of ${seconds(ring.ticks)} s.`);
+  if (level.brake.taps > 0) parts.push(`Brakes used: ${state.brakes.length} of ${level.brake.taps}.`);
+  return parts.join(' ');
 }
 
 // The ring goal's progress, 0 to 1 (0 on levels without a ring).
@@ -471,6 +499,7 @@ function drawResult() {
 
   const parts = [
     el('h2', { class: 'so-result-title' }, won ? `✓ Solved in ${seconds(state.tick)} s` : `✗ ${REASONS[state.reason]}`),
+    won ? null : el('p', { class: 'so-goal' }, progressText()),
     el('p', {}, detail),
     won && lastLevel ? el('p', {}, allSolved ? 'That was the last level. You have solved them all!' : 'That was the last level.') : null,
     el('div', { class: 'row' }, next, again),
@@ -629,7 +658,7 @@ function drawPreview(c) {
   ctx.fillStyle = c.text;
   ctx.globalAlpha = 0.8;
   for (const [x, y] of previewDots()) {
-    circle(x, y, 2.5);
+    circle(x, y, PREVIEW_DOT);
     ctx.fill();
   }
   ctx.globalAlpha = 1;

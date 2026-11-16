@@ -28,7 +28,7 @@
 .so-goal { font-weight: 600; }
 
 /* The line of numbers under the buttons: the aim before launch, the clock in flight. */
-.so-status { min-height: 3em; color: var(--muted); font: 14px/1.5 var(--mono); }
+.so-status { min-height: 3em; color: var(--muted); font: 14px/1.5 var(--mono); white-space: pre-line; }   /* pre-line: \n starts a new line */
 
 .so-hold { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; font: 14px var(--mono); }
 .so-hold .meter > span { background: var(--good); }

@@ -33,7 +33,7 @@
 //   2. Run `python3 scripts/arcade.py preview` and open
 //      http://127.0.0.1:8000/site/games/sling-orbit/?dev&level=so-07  (your new id).
 //   3. Press "Find a forgiving launch". After a few seconds it prints a `solution:` line
-//      and its margin. Paste the line here. ("Fly the solution" shows you the flight.)
+//      and its margin. Press "Fly the solution" to watch that launch, then paste the line here.
 //      Or win the level by hand: with ?dev the result box shows the launch and brakes you used.
 //   4. Run `python3 scripts/arcade.py test sling-orbit`. It fails if the solution does not
 //      win, if a launch within +-2 of it loses, or if a brake tap 12 ticks early or late
@@ -73,7 +73,7 @@ export const levels = [
   },
   {
     id: 'so-04', title: 'The hook',
-    hint: 'Thread the gap, then let the far planet swing you round.',
+    hint: 'Aim right of the gap: the near planet pulls you into it, then the far one swings you round.',
     start: [300, 540], aim: [-100, 0], maxSpeed: 320, maxTicks: 2400,
     bodies: [
       { at: [200, 380], r: 30, gm: 2000000 },
@@ -97,7 +97,7 @@ export const levels = [
   },
   {
     id: 'so-06', title: 'Tag, then park',
-    hint: 'Touch the far target first. One brake drops you in, a second one keeps you there.',
+    hint: 'Launch up, gently, so your loop dips onto the far target. Brake at your closest pass, and again at the next.',
     start: [60, 300], aim: [0, -120], maxSpeed: 320, maxTicks: 3000,
     bodies: [{ at: [300, 300], r: 34, gm: 2400000 }],
     goals: [
