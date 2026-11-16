@@ -11,6 +11,7 @@ This README is the runbook. Everything needed to run, change, check and publish 
 | Game | Folder | What it teaches |
 |---|---|---|
 | Packet Quest | `packet-quest` | DNS, security groups, refused versus timeout, longest-prefix routes, Service `targetPort`, return-path faults (internet gateway, stateless NACLs, NAT) |
+| Subnet Slicer | `subnet-slicer` | CIDR arithmetic: block sizes, boundaries, inside-or-not, right-sizing with AWS's 5 reserved addresses, overlaps, laying out a VPC (with `cidrsubnet`) |
 | Pod Packer | `pod-packer` | Kubernetes scheduling: requests, taints and tolerations, node selectors, draining, spot interruptions |
 | Canary | `canary` | Istio traffic management: weighted canary steps, header routes and route order, mirroring, timeouts and retries (and retry storms), outlier detection |
 | Ship It | `ship-it` | CI/CD: fail fast, parallel steps, artifacts, caches, branch rules, approvals, build once and promote, deploy locks. Shown as Jenkins, Bitbucket Pipelines and GitHub Actions |

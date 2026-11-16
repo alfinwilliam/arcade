@@ -1,0 +1,148 @@
+/* Styles for Subnet Slicer only. Shared pieces (.btn, .panel, .row ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours. */
+
+:root { --accent: var(--accent-11); }   /* this game's accent colour */
+
+main > * { min-width: 0; }             /* long code lines scroll inside their box, not the page */
+
+/* ------------------------------------------------------------ both kinds */
+
+.ss-board { gap: 10px; grid-template-columns: minmax(0, 1fr); }
+.ss-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.ss-head h2 { margin-right: auto; }
+.ss-brief { color: var(--muted); font-size: 15px; }
+.ss-tools { gap: 8px; }
+.ss-good { color: var(--good); font-weight: 600; }
+.ss-bad { color: var(--bad); font-weight: 600; }
+.ss-muted { color: var(--muted); }
+
+.ss-form { display: flex; gap: 8px; }
+.ss-input {
+  flex: 1; width: 100%; min-width: 0; min-height: var(--tap); padding: 8px 12px;   /* width: lets it shrink on a phone */
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text);
+  font: 600 18px var(--mono);
+}
+.ss-input::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; }
+.ss-input:disabled { opacity: 0.5; }
+
+/* ------------------------------------------------------------ drill */
+
+.ss-clock { min-width: 5ch; color: var(--muted); font: 600 15px var(--mono); text-align: right; }
+.ss-question { font: 600 clamp(18px, 4.8vw, 24px)/1.35 var(--font); }
+.ss-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.ss-choice { flex: 1 1 140px; font-family: var(--mono); }
+.ss-hint { color: var(--warn); font-size: 14px; }
+.ss-hint:empty { display: none; }
+.ss-feedback {
+  display: grid; gap: 4px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent); border-radius: 8px;
+  background: var(--surface-2); font-size: 15px;
+}
+.ss-last { color: var(--muted); font-size: 13px; }
+.ss-score { margin-right: auto; color: var(--muted); font: 600 14px var(--mono); }
+.is-drill > * { max-width: 760px; }
+
+/* ------------------------------------------------------------ carve */
+
+.ss-editor { gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); }
+.ss-edit-label { font-weight: 600; }
+.ss-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ss-step { padding: 4px 2px; font: 600 14px var(--mono); white-space: nowrap; }
+.ss-preview { font-size: 14px; }
+.ss-facts { color: var(--muted); font-family: var(--mono); }
+.ss-keys { color: var(--muted); font-size: 13px; }
+
+/* The address map: one bar for the whole VPC, wrapped into rows. A faint tick every 1/16 of a row. */
+.ss-mapbox { gap: 6px; }
+.ss-map { display: grid; gap: 4px; }
+.ss-maprow { display: grid; grid-template-columns: 10ch minmax(0, 1fr); align-items: center; gap: 6px; }
+.ss-maplabel { color: var(--muted); font: 11px var(--mono); text-align: right; }
+.ss-track {
+  position: relative; height: 26px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 4px;
+  background-color: var(--surface-2);
+  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+  background-size: calc(100% / 16) 100%;
+}
+.ss-seg {
+  position: absolute; top: 2px; bottom: 2px; min-width: 3px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  border-radius: 3px; font: 700 11px var(--mono);
+}
+.ss-seg span { padding: 0 2px; overflow: hidden; white-space: nowrap; }
+.ss-seg.is-need { background: var(--accent); color: var(--on-accent); box-shadow: inset 0 0 0 1px var(--bg); }
+.ss-seg.is-need.is-bad {                 /* a block with a problem: striped and marked "!", not just red */
+  background: repeating-linear-gradient(45deg, var(--bad) 0 4px, var(--surface) 4px 8px);
+  color: var(--text);
+}
+.ss-seg.is-need.is-bad span { background: var(--surface); border-radius: 3px; }
+.ss-seg.is-selected { box-shadow: inset 0 0 0 2px var(--text); }
+.ss-seg.is-taken {
+  border: 1px solid var(--muted);
+  background: repeating-linear-gradient(-45deg, var(--muted) 0 2px, transparent 2px 7px);
+  color: var(--text); font-weight: 600;
+}
+.ss-seg.is-taken span { background: var(--surface); border-radius: 3px; }
+.ss-seg.is-draft { border: 2px dashed var(--text); background: transparent; }
+.ss-map-note { color: var(--muted); font-size: 13px; }
+
+/* The needs: one button each. */
+.ss-needs {
+  display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  margin: 0; padding: 0; list-style: none;
+}
+.ss-needs > li { display: flex; }
+.ss-need {
+  flex: 1; display: grid; align-items: center; gap: 0 8px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "letter name block" "letter info info";
+  min-height: var(--tap); padding: 4px 10px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-2); color: var(--text);
+  text-align: left; cursor: pointer;
+}
+.ss-need:hover { border-color: var(--accent); }
+.ss-need[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.ss-need.is-bad { border-left: 4px solid var(--bad); }
+.ss-letter {
+  grid-area: letter; display: grid; place-items: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); font: 700 14px var(--mono);
+}
+.ss-need-name { grid-area: name; font: 700 14px var(--mono); }
+.ss-need-block { grid-area: block; font: 600 13px var(--mono); }
+.ss-need-info { grid-area: info; color: var(--muted); font-size: 13px; }
+
+/* Wide screens: editor and map side by side. */
+@media (min-width: 900px) {
+  .ss-board.is-carve {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    grid-template-areas: "head head" "brief brief" "editor map" "tools map" "needs needs" "keys keys";
+    align-items: start;
+  }
+  .is-carve > .ss-head { grid-area: head; }
+  .is-carve > .ss-brief { grid-area: brief; }
+  .is-carve > .ss-editor { grid-area: editor; }
+  .is-carve > .ss-tools { grid-area: tools; }
+  .is-carve > .ss-mapbox { grid-area: map; }
+  .is-carve > .ss-needs { grid-area: needs; }
+  .is-carve > .ss-keys { grid-area: keys; }
+}
+
+/* ------------------------------------------------------------ results */
+
+.ss-review { display: grid; gap: 8px; margin: 0; padding-left: 22px; font-size: 15px; }
+.ss-review li { display: grid; gap: 2px; }
+.ss-problems { margin: 0; padding-left: 18px; }
+.ss-lesson { font-size: 17px; }
+.ss-snippet { display: grid; gap: 4px; min-width: 0; }
+.ss-snippet-label { color: var(--accent); font: 600 13px var(--mono); }
+.ss-code {
+  margin: 0; padding: 10px 12px; overflow-x: auto;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+  font: 13px/1.5 var(--mono);
+}
+.ss-docs { margin: 0; padding-left: 18px; }
+.ss-docs a { overflow-wrap: anywhere; }

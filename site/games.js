@@ -16,6 +16,8 @@ export const groups = ['Networking', 'Kubernetes', 'Delivery', 'Operations', 'Ju
 export const games = [
   { id: 'packet-quest', title: 'Packet Quest', tag: 'puzzle', accent: 1, group: 'Networking',
     blurb: 'Follow one packet hop by hop, find where the network drops it, and fix the right thing.' },
+  { id: 'subnet-slicer', title: 'Subnet Slicer', tag: 'drill', accent: 11, group: 'Networking',
+    blurb: 'Quick CIDR drills and VPC layout puzzles: block sizes, boundaries, overlaps, and the five addresses AWS keeps in every subnet.' },
   { id: 'pod-packer', title: 'Pod Packer', tag: 'puzzle', accent: 2, group: 'Kubernetes',
     blurb: 'Buy nodes, place pods by their CPU and memory requests, ride out taints and spot reclaims, and keep the bill under the cap.' },
   { id: 'canary', title: 'Canary', tag: 'rollout', accent: 10, group: 'Kubernetes',
