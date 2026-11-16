@@ -1,0 +1,145 @@
+/* Styles for Packet Quest only. Shared pieces (.btn, .panel, .row ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours. */
+
+:root { --accent: var(--accent-1); }   /* this game's accent colour */
+
+/* ------------------------------------------------------------ the client box */
+
+.pq-client {
+  display: grid; gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg);
+}
+.pq-request { overflow-wrap: anywhere; }
+.pq-good { color: var(--good); }
+.pq-bad { color: var(--bad); }
+.pq-message { font-weight: 600; }
+.pq-fog .pill { margin-right: 4px; color: var(--accent); border-color: var(--accent); }
+.pq-hints { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+
+/* ------------------------------------------------------------------ the path
+ * A grid of cards. On a wide screen the cards sit in a row (wrapping when there are
+ * many); on a phone they stack. "dense" lets the cards that follow an open panel
+ * move up beside the earlier cards, so the panel sits under the whole row. */
+
+.pq-chain-wrap { position: relative; }
+.pq-chain {
+  display: grid; gap: 20px 24px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-auto-flow: dense;
+  margin: 0; padding: 8px 0 0; list-style: none;
+}
+.pq-hop { position: relative; display: grid; }
+
+/* The arrow from each card to the next one. */
+.pq-hop:not(.pq-last)::after {
+  content: "→";
+  position: absolute; top: 50%; right: -20px;
+  transform: translateY(-50%);
+  color: var(--muted); font: 600 16px var(--mono);
+}
+
+.pq-card {
+  display: grid; gap: 4px; align-content: start;
+  width: 100%; min-height: 104px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text);
+  font: inherit; text-align: left;
+}
+button.pq-card { cursor: pointer; transition: border-color 120ms; }
+button.pq-card:hover { border-color: var(--accent); }
+button.pq-card[aria-expanded="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.pq-cap .pq-card { background: transparent; border-style: dashed; }
+
+.pq-kind { color: var(--muted); font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.pq-name { font-weight: 600; overflow-wrap: anywhere; }
+.pq-status { color: var(--muted); font: 600 13px var(--mono); min-height: 1.4em; }
+.pq-changed {
+  justify-self: start; padding: 0 8px;
+  border: 1px solid var(--warn); border-radius: 999px;
+  color: var(--warn); font: 600 12px var(--mono);
+}
+
+/* What happened to the last packet at this hop. The words say it; the colour repeats it. */
+.pq-hop[data-status="passed"] .pq-card { border-color: var(--good); }
+.pq-hop[data-status="passed"] .pq-status { color: var(--good); }
+.pq-hop[data-status="stopped"] .pq-card { border-color: var(--bad); border-width: 2px; }
+.pq-hop[data-status="stopped"] .pq-status { color: var(--bad); }
+.pq-hop[data-leg="back"] .pq-card { border-style: dashed; }
+
+/* The travelling packet: a small badge that slides to the top corner of each card. */
+.pq-packet {
+  position: absolute; top: 0; left: 0;
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border-radius: 999px;
+  background: var(--accent); color: var(--on-accent);
+  font: 700 14px/1 var(--mono);
+  pointer-events: none;
+  transition: transform 350ms ease-in-out;
+}
+.pq-packet[data-state="stopped"] { background: var(--bad); }
+.pq-packet[data-state="delivered"] { background: var(--good); }
+
+/* ------------------------------------------------------- the open hop's panel */
+
+.pq-inspector {
+  grid-column: 1 / -1;
+  display: grid; gap: var(--gap);
+  padding: 16px;
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  background: var(--bg);
+}
+.pq-inspector-head { display: flex; align-items: center; justify-content: space-between; gap: var(--gap); }
+.pq-label {
+  margin-bottom: 4px;
+  color: var(--muted); font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.pq-config { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 14px; overflow-wrap: anywhere; }
+.pq-note { padding-left: 12px; border-left: 3px solid var(--line); color: var(--muted); }
+.pq-verdict { padding-left: 12px; border-left: 3px solid var(--accent); }
+.pq-fixes { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.pq-fix { width: 100%; justify-content: flex-start; flex-wrap: wrap; text-align: left; font-weight: 500; }
+.pq-fix[aria-pressed="true"] { border-color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn); }
+.pq-seen { flex: 1 1 200px; }
+.pq-undo { margin-left: auto; color: var(--muted); font: 600 12px var(--mono); }
+
+/* ------------------------------------------------------------ the win panel */
+
+.result { animation: pq-pop 320ms ease-out; }
+@keyframes pq-pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.pq-big-stars { font-size: 28px; }
+.pq-command {
+  margin: 0 0 8px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg);
+  font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------- phones
+ * One column. Each card becomes a short row: name on the left, status on the right. */
+
+@media (max-width: 600px) {
+  .pq-actions .kbd { display: none; }                 /* no keyboard on a phone */
+  .pq-actions .btn-primary { flex: 1 0 100%; }
+  .pq-actions .btn-quiet { flex: 1 1 auto; }
+  .pq-chain { grid-template-columns: 1fr; gap: 22px; }
+  .pq-hop:not(.pq-last)::after {
+    content: "↓";
+    top: auto; right: auto; bottom: -22px; left: 24px;
+    transform: none;
+  }
+  .pq-card {
+    min-height: 56px;
+    grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
+  }
+  .pq-kind { grid-column: 1; }
+  .pq-name { grid-column: 1; }
+  .pq-status { grid-column: 2; grid-row: 1 / span 2; text-align: right; }
+  .pq-changed { grid-column: 1; }
+}

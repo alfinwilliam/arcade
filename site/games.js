@@ -9,6 +9,8 @@
 //           Use the same number as the game's own style.css.
 
 export const games = [
+  { id: 'packet-quest', title: 'Packet Quest', tag: 'puzzle', accent: 1,
+    blurb: 'Follow one packet hop by hop, find where the network drops it, and fix the right thing.' },
   { id: 'pod-packer', title: 'Pod Packer', tag: 'puzzle', accent: 2,
     blurb: 'Buy nodes, place pods by their CPU and memory requests, ride out taints and spot reclaims, and keep the bill under the cap.' },
   { id: 'traffic-spike', title: 'Traffic Spike', tag: 'defence', accent: 3,
