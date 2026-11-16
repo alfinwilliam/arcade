@@ -1,0 +1,27 @@
+/* The lessons page. Shared pieces come from ../shared/base.css. */
+
+.lesson-game { padding: 0; }
+.lesson-game > summary {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  min-height: var(--tap); padding: 12px 16px;
+  cursor: pointer; list-style: none;
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+}
+.lesson-game > summary::-webkit-details-marker { display: none; }
+.lesson-game > summary::before { content: '▸'; color: var(--muted); }
+.lesson-game[open] > summary::before { content: '▾'; }
+.lesson-game > summary h2 { font-size: 18px; }
+
+.lesson-list { margin: 0; padding: 0 16px 16px; list-style: none; display: grid; gap: 16px; }
+.lesson { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+.lesson h3 { font-size: 15px; font-family: var(--mono); color: var(--muted); }
+.lesson-label { margin-top: 4px; color: var(--muted); font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.lesson pre {
+  margin: 0; padding: 10px 12px; overflow-x: auto;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  font: 13px/1.5 var(--mono);
+}
+.lesson-docs { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; }
+.lesson-docs a { word-break: break-word; }

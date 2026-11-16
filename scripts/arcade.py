@@ -232,7 +232,7 @@ def pages_for(slugs):
         pages = [f"games/{slug}/index.html" for slug in slugs]
     else:
         games = sorted(p.parent.name for p in (SITE / "games").glob("*/index.html"))
-        pages = ["index.html", "404.html"] + [f"games/{game}/index.html" for game in games]
+        pages = ["index.html", "404.html", "lessons/index.html"] + [f"games/{game}/index.html" for game in games]
     absent = [page for page in pages if not (SITE / page).is_file()]
     if slugs and absent:
         sys.exit("No such page: " + ", ".join("site/" + page for page in absent))
@@ -327,9 +327,12 @@ ALLOWED_NETWORKS = [ipaddress.ip_network(net) for net in (
 EXAMPLE_HOSTS = ("example.com", "example.org", "example.net")
 # Hostnames that may be mentioned anywhere (documentation and tool names, never infrastructure).
 DOC_HOSTS = ("github.com", "github.io", "amazon.com", "kubernetes.io", "mozilla.org",
-             "nodejs.org", "python.org", "w3.org", "chromium.org", "rfc-editor.org", "ietf.org")
-# Hosts that pages under site/ may actually link to.
-SITE_LINK_HOSTS = EXAMPLE_HOSTS + ("www.w3.org", "github.com", "localhost", "127.0.0.1")
+             "nodejs.org", "python.org", "w3.org", "chromium.org", "rfc-editor.org", "ietf.org",
+             # tool documentation, and the API groups that appear in Kubernetes YAML
+             "istio.io", "argoproj.io", "argo-cd.readthedocs.io", "k8s.io", "prometheus.io",
+             "coreos.com", "jenkins.io", "atlassian.com", "bitbucket.org", "sre.google")
+# Hosts that pages under site/ may link to: examples, and documentation (links only, never loads).
+SITE_LINK_HOSTS = EXAMPLE_HOSTS + DOC_HOSTS + ("localhost", "127.0.0.1")
 ALLOWED_EMAIL_DOMAINS = EXAMPLE_HOSTS + ("users.noreply.github.com",)
 EXAMPLE_ACCOUNT_ID = "123456789012"
 
