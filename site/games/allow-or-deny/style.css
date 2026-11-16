@@ -1,0 +1,132 @@
+/* Styles for Allow or Deny only. Shared pieces (.btn, .panel, .row ...) come from
+ * ../../shared/base.css. Use the colour tokens, never raw colours.
+ *
+ * Phone first: the board is one column (flex, so the answer bar can stick to the bottom of
+ * the screen). From 900px wide: request, answers and explanation on the left, policies on the right. */
+
+:root { --accent: var(--accent-12); }   /* this game's accent colour: silver */
+
+main > * { min-width: 0; }             /* long ARNs wrap inside their box, not the page */
+
+/* ------------------------------------------------------------ the board */
+
+.aod-board { display: flex; flex-direction: column; gap: 12px; }
+.aod-left { display: contents; }       /* phone: its children sit straight in the board */
+.aod-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.aod-head h2 { margin-right: auto; }
+.aod-score { color: var(--muted); font: 600 13px var(--mono); }
+.aod-brief { color: var(--muted); font-size: 15px; }
+.aod-sub { color: var(--muted); font-size: 13px; }
+.aod-cross { color: var(--warn); font-weight: 600; }
+code { font-family: var(--mono); overflow-wrap: anywhere; }
+
+/* The request card */
+.aod-request {
+  display: grid; gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px;
+  background: var(--surface-2);
+}
+.aod-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 0; font-size: 14px; }
+.aod-dl dt { color: var(--muted); font: 600 12px/1.9 var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
+.aod-dl dd { margin: 0; min-width: 0; }
+.aod-strong { font-weight: 700; }
+.aod-context { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.aod-missing { color: var(--warn); font-style: italic; }
+.aod-note { font-size: 14px; }
+
+/* The explanation after an answer */
+.aod-verdict {
+  display: grid; gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line); border-left: 4px solid var(--good); border-radius: 8px;
+  scroll-margin-top: 8px;
+}
+.aod-verdict.is-wrong { border-left-color: var(--bad); }
+.aod-steps { display: grid; gap: 8px; margin: 0; padding-left: 22px; font-size: 14px; }
+.aod-step { display: grid; gap: 2px; }
+.aod-mark { font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: 0.03em; }
+.aod-step.is-ok .aod-mark, .aod-step.is-allow .aod-mark { color: var(--good); }
+.aod-step.is-note .aod-mark { color: var(--muted); }
+.aod-step.is-deny .aod-mark { color: var(--bad); }
+.aod-step.is-no .aod-mark { color: var(--warn); }
+.aod-notes { margin: 2px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+
+/* The answer bar. On a phone it sticks to the bottom of the screen and comes after the policies. */
+.aod-bar {
+  order: 10;
+  position: sticky; bottom: 0; z-index: 1;
+  display: grid; gap: 8px;
+  margin: 0 -16px -16px; padding: 10px 16px 12px;
+  border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface);
+  box-shadow: 0 -6px 16px color-mix(in srgb, var(--bg) 70%, transparent);
+}
+.aod-buttons { display: flex; gap: 8px; }
+.aod-answer { flex: 1 1 0; min-height: 52px; font-size: 18px; }
+.aod-allow { border-color: var(--good); }
+.aod-deny { border-color: var(--bad); }
+.aod-two { display: grid; text-align: left; line-height: 1.2; }
+.aod-two small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.aod-ask { font-weight: 600; }
+.aod-back { justify-self: start; min-height: var(--tap); }
+
+/* The policies */
+.aod-policies { display: grid; gap: 8px; min-width: 0; }
+.aod-ph { color: var(--muted); font: 600 13px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.aod-none { color: var(--muted); font-style: italic; }
+.aod-policy { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); min-width: 0; }
+.aod-policy.is-empty { border-color: var(--warn); box-shadow: inset 3px 0 0 var(--warn); }
+.aod-policy summary {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
+  min-height: var(--tap); padding: 6px 10px;
+  cursor: pointer;
+}
+.aod-pname { font: 700 14px var(--mono); overflow-wrap: anywhere; }
+.aod-ptag { color: var(--warn); font: 700 12px var(--mono); }
+.aod-type { color: var(--text); }
+.aod-type.is-scp, .aod-type.is-boundary, .aod-type.is-session { border-style: dashed; }   /* the ones that only limit */
+.aod-json {
+  margin: 0; padding: 8px 10px 10px;
+  border-top: 1px solid var(--line);
+  font: 12.5px/1.45 var(--mono);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.aod-line { display: block; padding-left: calc((var(--i) + 2) * 1ch); text-indent: calc((var(--i) + 2) * -1ch); }
+.aod-stmt { display: block; border-radius: 4px; }
+.aod-stmt.is-allow { background: color-mix(in srgb, var(--good) 14%, transparent); box-shadow: inset 3px 0 0 var(--good); }
+.aod-stmt.is-deny { background: color-mix(in srgb, var(--bad) 16%, transparent); box-shadow: inset 3px 0 0 var(--bad); }
+.aod-tag { display: block; padding-left: 4px; font-weight: 700; font-family: var(--font); font-size: 12px; }
+.aod-stmt.is-skip { box-shadow: inset 3px 0 0 var(--muted); }
+.aod-stmt.is-allow .aod-tag { color: var(--good); }
+.aod-stmt.is-skip .aod-tag { color: var(--muted); }
+.aod-stmt.is-deny .aod-tag { color: var(--bad); }
+
+/* ------------------------------------------------------------ the result */
+
+.aod-result { scroll-margin-top: 8px; }
+.aod-review { display: grid; gap: 4px; margin: 0; padding-left: 22px; font-size: 14px; }
+.aod-good { color: var(--good); font-weight: 700; }
+.aod-bad { color: var(--bad); font-weight: 700; }
+.aod-lesson { font-size: 17px; }
+.aod-snippet { display: grid; gap: 4px; min-width: 0; }
+.aod-snippet-label { color: var(--accent); font: 600 13px var(--mono); }
+.aod-code {
+  margin: 0; padding: 10px 12px; overflow-x: auto;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+  font: 13px/1.5 var(--mono);
+}
+.aod-docs { margin: 0; padding-left: 18px; }
+.aod-docs a { overflow-wrap: anywhere; }
+
+/* ------------------------------------------------------------ wide screens */
+
+@media (min-width: 900px) {
+  .aod-board {
+    display: grid; align-items: start; gap: 12px 16px;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+  .aod-head, .aod-brief { grid-column: 1 / -1; }
+  .aod-left { display: grid; gap: 12px; align-content: start; }
+  .aod-bar { order: 0; position: static; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; }
+}

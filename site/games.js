@@ -18,6 +18,8 @@ export const games = [
     blurb: 'Follow one packet hop by hop, find where the network drops it, and fix the right thing.' },
   { id: 'subnet-slicer', title: 'Subnet Slicer', tag: 'drill', accent: 11, group: 'Networking',
     blurb: 'Quick CIDR drills and VPC layout puzzles: block sizes, boundaries, overlaps, and the five addresses AWS keeps in every subnet.' },
+  { id: 'allow-or-deny', title: 'Allow or Deny', tag: 'iam', accent: 12, group: 'Security',
+    blurb: 'Read the request and the policies in play, then call it: will AWS IAM allow it, or deny it explicitly or implicitly?' },
   { id: 'pod-packer', title: 'Pod Packer', tag: 'puzzle', accent: 2, group: 'Kubernetes',
     blurb: 'Buy nodes, place pods by their CPU and memory requests, ride out taints and spot reclaims, and keep the bill under the cap.' },
   { id: 'canary', title: 'Canary', tag: 'rollout', accent: 10, group: 'Kubernetes',
