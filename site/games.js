@@ -18,6 +18,8 @@ export const games = [
     blurb: 'Follow one packet hop by hop, find where the network drops it, and fix the right thing.' },
   { id: 'pod-packer', title: 'Pod Packer', tag: 'puzzle', accent: 2, group: 'Kubernetes',
     blurb: 'Buy nodes, place pods by their CPU and memory requests, ride out taints and spot reclaims, and keep the bill under the cap.' },
+  { id: 'canary', title: 'Canary', tag: 'rollout', accent: 10, group: 'Kubernetes',
+    blurb: 'Roll out v2 of a service through an Istio mesh: shift weights, route testers, mirror, set timeouts and retries, eject a bad pod.' },
   { id: 'ship-it', title: 'Ship It', tag: 'pipeline', accent: 7, group: 'Delivery',
     blurb: 'Rearrange a CI/CD pipeline until every check passes: fail fast, run in parallel, cache, gate and lock the deploy.' },
   { id: 'out-of-sync', title: 'Out of Sync', tag: 'gitops', accent: 9, group: 'Delivery',

@@ -12,6 +12,7 @@ This README is the runbook. Everything needed to run, change, check and publish 
 |---|---|---|
 | Packet Quest | `packet-quest` | DNS, security groups, refused versus timeout, longest-prefix routes, Service `targetPort`, return-path faults (internet gateway, stateless NACLs, NAT) |
 | Pod Packer | `pod-packer` | Kubernetes scheduling: requests, taints and tolerations, node selectors, draining, spot interruptions |
+| Canary | `canary` | Istio traffic management: weighted canary steps, header routes and route order, mirroring, timeouts and retries (and retry storms), outlier detection |
 | Ship It | `ship-it` | CI/CD: fail fast, parallel steps, artifacts, caches, branch rules, approvals, build once and promote, deploy locks. Shown as Jenkins, Bitbucket Pipelines and GitHub Actions |
 | Out of Sync | `out-of-sync` | Argo CD and GitOps: sync and health status, prune, self-heal, hooks and sync waves, rolling back with `git revert`, ignoreDifferences for HPA-managed replicas |
 | Traffic Spike | `traffic-spike` | Caches, rate limiters, queues and servers under load |
