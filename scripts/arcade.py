@@ -336,6 +336,8 @@ SITE_LINK_HOSTS = EXAMPLE_HOSTS + DOC_HOSTS + ("localhost", "127.0.0.1",
                                               "kubernetes.default.svc")   # the in-cluster API address in Argo CD YAML
 ALLOWED_EMAIL_DOMAINS = EXAMPLE_HOSTS + ("users.noreply.github.com",)
 EXAMPLE_ACCOUNT_ID = "123456789012"
+# AWS documentation uses these as example account ids too (needed for cross-account examples).
+EXAMPLE_ACCOUNT_IDS = (EXAMPLE_ACCOUNT_ID, "111122223333", "444455556666")
 
 RE_IPV4 = re.compile(r"(?<![\w.])(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?![\w]|\.\d)")
 RE_12_DIGITS = re.compile(r"(?<![\w.#-])\d{12}(?!\w)")
@@ -368,8 +370,8 @@ def public_problems(line):
         if not any(address in net for net in ALLOWED_NETWORKS):
             found.append(f"{match.group(0)} is not an example address (use 10.x, 192.0.2.x, 198.51.100.x or 203.0.113.x)")
     for match in RE_12_DIGITS.finditer(line):
-        if match.group(0) != EXAMPLE_ACCOUNT_ID:
-            found.append(f"{match.group(0)} looks like an account id (use {EXAMPLE_ACCOUNT_ID})")
+        if match.group(0) not in EXAMPLE_ACCOUNT_IDS:
+            found.append(f"{match.group(0)} looks like an account id (use {EXAMPLE_ACCOUNT_ID} or 111122223333)")
     for match in RE_HOST.finditer(line):
         if not ends_with_host(match.group(1), EXAMPLE_HOSTS + DOC_HOSTS):
             found.append(f"{match.group(1)} looks like a real hostname (use example.com)")

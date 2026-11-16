@@ -144,7 +144,7 @@ The page itself also shows a red banner with the error and the file and line, in
    - `levels.js`: the `tpl-` id prefix and the header comment;
    - `style.css`: the accent number.
 4. Change the rules in `logic.js`, the content in `levels.js` and the page in `main.js`. Add a test to `tests/<name>.test.js` for each new rule.
-5. Add one line to `site/games.js` so the hub shows it as a planet. Use the same accent number (1 to 11) as the game's `style.css`, and a `group` from the `groups` list at the top of that file. Games in the "Just for fun" group orbit close to the sun; all others go on the outer ring.
+5. Add one line to `site/games.js` so the hub shows it as a planet. Use the same accent number (1 to 12) as the game's `style.css`, and a `group` from the `groups` list at the top of that file. Games in the "Just for fun" group orbit close to the sun; all others go on the outer ring.
 6. Run `python3 scripts/arcade.py check`.
 
 A game folder with no line in `site/games.js` is still published, but nothing links to it.

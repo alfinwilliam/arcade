@@ -35,6 +35,7 @@
   --accent-9: #8c9eff;    /* indigo */
   --accent-10: #f2d45c;   /* yellow */
   --accent-11: #d4a373;   /* tan */
+  --accent-12: #cfd8e3;   /* silver */
   --accent: var(--accent-1);
   --on-accent: #08101f;   /* text on top of an accent-coloured button */
 
@@ -68,6 +69,7 @@
     --accent-9: #4054b2;
     --accent-10: #806500;
     --accent-11: #8a5a2b;
+    --accent-12: #4b5563;
     --on-accent: #ffffff;
   }
 }
@@ -94,6 +96,7 @@
   --accent-9: #4054b2;
   --accent-10: #806500;
   --accent-11: #8a5a2b;
+  --accent-12: #4b5563;
   --on-accent: #ffffff;
 }
 

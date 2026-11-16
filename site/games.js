@@ -5,13 +5,13 @@
 //   title    the name on the card
 //   blurb    one sentence under the title
 //   tag      a short label, e.g. "puzzle" or "toy"
-//   accent   which accent colour token the card uses: 1 to 11 (see shared/base.css).
+//   accent   which accent colour token the card uses: 1 to 12 (see shared/base.css).
 //            Use the same number as the game's own style.css.
 //   group    which hub section the card goes in: one of the names in `groups` below
 //   lessons  optional. Set it to false for a game with no levels.js (the lessons page skips it)
 
 // Hub sections, in the order they appear. A card whose group is not listed goes under "More".
-export const groups = ['Networking', 'Kubernetes', 'Delivery', 'Operations', 'Just for fun'];
+export const groups = ['Networking', 'Security', 'Kubernetes', 'Delivery', 'Operations', 'Just for fun'];
 
 export const games = [
   { id: 'packet-quest', title: 'Packet Quest', tag: 'puzzle', accent: 1, group: 'Networking',
