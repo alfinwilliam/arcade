@@ -21,6 +21,8 @@
 //                label: 'gpu'   pods with  needs: 'gpu'  may only be placed on a node with
 //                               this label (it works like a nodeSelector)
 //                spot: true     marks the type as one that can be reclaimed (see events)
+//              Billing: when a turn ends, every live node is charged its price, including
+//              one bought during that turn. A node drained before the turn ends is not charged.
 //   arrivals   which pods turn up at the start of which turn:
 //                { turn: 1, pods: [ { id, cpu, mem }, ... ] }
 //              Pod ids are unique in the level and have no spaces. Optional pod extras:
@@ -43,8 +45,12 @@
 //
 // To add a level: copy an entry, give it a new id, change the pods and prices, and set
 // solution to []. Open the game with ?dev on the end of the URL, win the level, and paste
-// the moves it shows into `solution`. Then pick maxBill: more than 15% above the solution's
-// bill, and below what buying a separate node for every pod would cost (the tests check both).
+// the moves it shows into `solution`. Then pick maxBill. The tests check two things:
+//   - it is more than 15% above the solution's bill, so a good but imperfect game still wins;
+//   - it is low enough that a naive player loses. The tests play that player: it buys a new
+//     node of the cheapest type each pod fits on, never shares a node and never drains.
+//     With spot nodes it usually loses to the reclaim rather than to the bill.
+// A replacement pod keeps its id: after 'drain n1', place it again with 'place web-1 n2'.
 //
 // Sizes and prices are made up. They are kept the same from level to level
 // (small, spot, gpu) so that a player only has to learn them once. Pod sizes are chosen so

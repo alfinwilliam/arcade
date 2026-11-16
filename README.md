@@ -34,6 +34,20 @@ Everything goes through one script. Run it from the repo root.
 
 A game name is its folder name under `site/games/`, for example `pod-packer`. With no name, a command covers everything.
 
+### Experiments
+
+`run` is the quickest way to try a rule or check a number without the page. Write a small file anywhere, for example `~/try.js`:
+
+```js
+import { levels } from '/site/games/pod-packer/levels.js';
+import { replay } from '/site/games/pod-packer/logic.js';
+
+const level = levels[0];
+console.log(level.id, replay(level, level.solution).bill);
+```
+
+Then `python3 scripts/arcade.py run ~/try.js` prints what it logs. A file outside the repo imports game code by its address on the local server, starting `/site/games/...` as above. A file inside the repo uses ordinary relative paths instead.
+
 ## Layout
 
 ```
@@ -84,15 +98,34 @@ The rules every game follows:
 5. Run `python3 scripts/arcade.py check`.
 6. Commit and push. The site updates when the run on the Actions tab turns green.
 
-If you save a level that cannot be won as written, `test` fails and names the level. If you make a typing mistake in a data file, the page shows a red banner with the error instead of going blank.
+**Without a browser** (or to check your sums): work the solution out from the header comment, put it in `solution`, and run `python3 scripts/arcade.py test <game>`. If a move is wrong, the failure names the level, the move and the reason. To see a number such as a level's bill, write a few lines that import the game's `levels.js` and `logic.js` and print it, and run them with `python3 scripts/arcade.py run yourfile.js` (see "Experiments" below).
+
+## When a check fails
+
+| You see | It means |
+|---|---|
+| `Unexpected identifier 'X'`, `Unexpected string` or `Unexpected token` with `(in site/games/.../levels.js, line N ...)` | A typing mistake in that file, almost always a missing comma or bracket at or just before line N |
+| `<level id>: the solution wins` fails, naming a move | That move is not allowed at that point; the message says why |
+| A level id with `expected something true, got false` | One of the rules in that file's header comment is broken (for example, a cap that is too tight). Read the test's name: it says which rule |
+| `smoke` fails with `never set the ready flag` | The page stopped before it finished drawing. Run `preview`, open the page, press F12 and look at the Console |
+| `lint` names a value | It does not look like an example value. Change it to one (see "What the checks cover") |
+
+`check` runs all three checks even if one fails, and long output repeats the failures at the end.
+
+The page itself also shows a red banner with the error and the file and line, instead of going blank.
 
 ## Add a new game
 
 1. Copy `site/games/_template/` to `site/games/<name>/`.
 2. Copy `tests/_template.test.js` to `tests/<name>.test.js` and change its two import paths.
-3. Change the rules in `logic.js`, the content in `levels.js` and the page in `main.js`.
-4. Run `python3 scripts/arcade.py check`.
-5. Add one line to `site/games.js` so the hub shows a card for it.
+3. Rename what still says "template". `lint` does not catch these:
+   - `main.js`: `SAVE_KEY` (use `'<name>:stars'`, or the new game shares saved progress with the template) and the title in `mountShell`;
+   - `index.html`: the `<title>` and the description;
+   - `levels.js`: the `tpl-` id prefix and the header comment;
+   - `style.css`: the accent number.
+4. Change the rules in `logic.js`, the content in `levels.js` and the page in `main.js`. Add a test to `tests/<name>.test.js` for each new rule.
+5. Add one line to `site/games.js` so the hub shows a card for it. Use the same accent number as the game's `style.css`; all six are taken, so share one.
+6. Run `python3 scripts/arcade.py check`.
 
 A game folder with no line in `site/games.js` is still published, but nothing links to it.
 

@@ -177,8 +177,19 @@ def print_report(report, what):
         print(f"{what}: the page never reported back.")
         print("Run `python3 scripts/arcade.py preview` and open the page in a browser to see why.")
         return 2
-    for line in report.get("lines", []):
+    lines = report.get("lines", [])
+    for line in lines:
         print(line)
+    # A failure is easy to miss among hundreds of "ok" lines, so repeat the failures at the end.
+    failures = []
+    for i, line in enumerate(lines):
+        if line.startswith("FAIL"):
+            failures.append(line)
+            failures += [more for more in lines[i + 1:i + 4] if more.startswith("        ")]
+    if failures and len(lines) > 20:
+        print("--- the failures again ---")
+        for line in failures:
+            print(line)
     if report.get("kind") == "page-error":
         print(f"{what}: the page itself failed to load: {report.get('message')}")
     missing = sorted(set(NOT_FOUND))
@@ -462,12 +473,15 @@ def cmd_lint(args):
 
 
 def cmd_check(args):
+    # Runs all three even when one fails, so you see every problem in one go.
+    failed = []
     for name, command in (("lint", cmd_lint), ("test", cmd_test), ("smoke", cmd_smoke)):
         print(f"== {name}")
-        code = command(args)
-        if code != 0:
-            print(f"check: {name} failed")
-            return code
+        if command(args) != 0:
+            failed.append(name)
+    if failed:
+        print(f"check: FAILED in {', '.join(failed)}. Scroll up to the '== {failed[0]}' section.")
+        return 1
     print("check: all good")
     return 0
 

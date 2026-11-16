@@ -14,7 +14,19 @@ const all = readdirSync(new URL('.', import.meta.url))
   .sort();
 const names = wanted.length > 0 ? wanted : all;
 
-const summary = await runFiles(names, (name) => import(`./${name}.test.js`));
+// Node puts the file and line of a typing mistake in the first line of the error's stack,
+// not in its message. Add it to the message so the failure says where to look.
+async function load(name) {
+  try {
+    return await import(`./${name}.test.js`);
+  } catch (error) {
+    const firstLine = String((error && error.stack) || '').split('\n')[0];
+    if (/:\d+$/.test(firstLine)) throw new Error(`${error.message} (in ${firstLine})`);
+    throw error;
+  }
+}
+
+const summary = await runFiles(names, load);
 for (const line of format(summary)) console.log(line);
 
 process.exit(summary.failed === 0 && summary.passed > 0 ? 0 : 1);

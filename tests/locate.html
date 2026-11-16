@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>locate</title>
+  <link rel="icon" href="data:,">
+  <script>
+    // Loads one module with a <script> tag and reports where it failed. A typing mistake
+    // (a missing comma in levels.js, say) makes import() fail with no file or line, but
+    // the page's error event carries both. browser-runner.js opens this page in a hidden
+    // frame when a test file will not load:  locate.html?module=./pod-packer.test.js
+    function report(data) {
+      data.locate = true;
+      parent.postMessage(data, '*');
+    }
+    addEventListener('error', function (event) {
+      report({ file: String(event.filename || ''), line: event.lineno || 0, message: String(event.message || '') });
+    });
+    var tag = document.createElement('script');
+    tag.type = 'module';
+    tag.src = new URLSearchParams(location.search).get('module');
+    tag.onload = function () { report({ file: '', line: 0, message: 'loaded fine' }); };
+    tag.onerror = function () { report({ file: '', line: 0, message: 'a file could not be fetched' }); };
+    document.head.appendChild(tag);
+  </script>
+</head>
+<body></body>
+</html>

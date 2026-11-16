@@ -70,9 +70,17 @@ function showError(message) {
   banner.textContent = `Something broke: ${message}. The browser console (F12) has the file and line.`;
 }
 
+// The file and line, e.g. "levels.js line 42", so a typing mistake in a data file can be found.
+function whereIn(event) {
+  if (!event.filename || !event.lineno) return '';
+  const file = event.filename.split('?')[0].split('/').slice(-2).join('/');
+  return ` (in ${file}, line ${event.lineno})`;
+}
+
 window.addEventListener('error', (event) => {
   const failedFile = event.target && event.target !== window && (event.target.src || event.target.href);
-  showError(event.message || (failedFile ? `could not load ${failedFile}` : 'a file failed to load'));
+  if (event.message) showError(event.message + whereIn(event));
+  else showError(failedFile ? `could not load ${failedFile}` : 'a file failed to load');
 }, true);
 
 window.addEventListener('unhandledrejection', (event) => {

@@ -55,6 +55,21 @@
 //    { serviceActive: name }             that service is running
 //    { serviceAnswers: name }            the player's last command was a curl that this service answered
 //
+// Commands the pretend shell has (use only these in `solution` and `chips`):
+//   ls cd pwd cat head tail grep wc echo rm chmod sed ps kill ss df du systemctl
+//   journalctl curl sudo help clear
+// There is no chown, mv, cp or text editor; change a file with sed -i or echo >.
+// In the game, `help` lists them. Adding a command means changing logic.js (the COMMANDS table).
+//
+// Besides "the solution wins", the tests also require of every scenario:
+//   - the goal is not met at the start;
+//   - each failed service's `log` lines are already in the journal before anything is typed;
+//   - restarting services without fixing anything does not win;
+//   - every rm, chmod, sed or kill in the solution is needed: leaving any one out stops it winning;
+//   - every solution command is covered by a chip (a chip ending in a space counts for any
+//     command that starts with it, e.g. 'sudo rm ').
+// `response` can be left out of a service that does not answer HTTP (sample-db in es-04).
+//
 // To add a scenario: copy an entry, change it, and give it a new id. Open the game with
 // ?dev on the end of the URL, win it, and paste the commands it shows into `solution`.
 // Use example values only: sample-app, example.com, 10.0.0.x addresses.
