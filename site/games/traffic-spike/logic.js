@@ -6,7 +6,8 @@
 //   Requests enter the lane at position 0 and move `rules.speed` units every tick.
 //   The lane is cut into slots of `rules.slotUnits` units. A component sits in a slot
 //   and, each tick, handles up to its `rate` of the requests that are inside its slot.
-//   A legitimate request that walks off the far end unanswered is an error.
+//   A legitimate request that walks off the far end unanswered is an error. So is one
+//   that waits in queues for longer than `rules.patience` ticks: it gives up.
 //   More errors than the level's `errorBudget` loses. Clearing every wave wins.
 //
 // The state is plain data. The functions below never edit the state they are given;
@@ -66,14 +67,16 @@ export function start(level) {
     money: level.budget,        // rupees
     errors: 0,                  // legitimate requests that got no answer
     missed: {},                 // the same errors counted per kind, e.g. { api: 4 }
-    answered: 0,                // legitimate requests that did
-    lane: [],                   // groups of requests: { kind, pos, count }
+    timedOut: 0,                // the errors that were requests giving up in a queue
+    answered: 0,                // legitimate requests that got an answer
+    lane: [],                   // groups of requests: { kind, pos, count, waited }
     slots: new Array(level.slots).fill(null),   // null, or { kind, held, done, boughtWave, boughtT }
     rejected: [],               // actions that were refused: { action, reason }
     // What happened in the most recent tick. The page uses these for feedback only.
     worked: new Array(level.slots).fill(0),     // requests each slot handled
+    gaveUp: new Array(level.slots).fill(0),     // legitimate requests that gave up in each queue
     gone: [],                   // what the components took off the lane: { kind, pos, count }
-    newErrors: 0,
+    newErrors: 0,               // legitimate requests that reached the exit unanswered
     paid: 0,                    // reward paid for a wave that just ended
   };
 }
@@ -144,12 +147,17 @@ export function apply(state, action) {
 
 // ---------------------------------------------------------------- one tick
 
+// A group of legitimate requests gets no answer: an error for each request in it.
+function unanswered(state, group) {
+  state.errors += group.count;
+  state.missed[group.kind] = (state.missed[group.kind] || 0) + group.count;
+}
+
 // A group of requests walks off the far end of the lane.
 function leave(state, group) {
   if (!kinds[group.kind].legit) return;
-  state.errors += group.count;
+  unanswered(state, group);
   state.newErrors += group.count;
-  state.missed[group.kind] = (state.missed[group.kind] || 0) + group.count;
 }
 
 // Step 1: everything on the lane moves forward. Whatever passes the end, leaves.
@@ -169,7 +177,7 @@ function spawnRequests(state) {
   const wave = currentWave(state);
   if (state.t >= wave.ticks) return;
   for (const kind of Object.keys(wave.perTick)) {
-    if (wave.perTick[kind] > 0) state.lane.push({ kind, pos: 0, count: wave.perTick[kind] });
+    if (wave.perTick[kind] > 0) state.lane.push({ kind, pos: 0, count: wave.perTick[kind], waited: 0 });
   }
 }
 
@@ -189,14 +197,34 @@ function takeFromSlot(state, slot, takes, limit) {
     const count = Math.min(room, group.count);
     group.count -= count;
     room -= count;
-    taken.push({ kind: group.kind, pos: group.pos, count });
+    taken.push({ kind: group.kind, pos: group.pos, count, waited: group.waited });
   }
   state.lane = state.lane.filter((group) => group.count > 0);
-  state.gone.push(...taken);
+  for (const group of taken) state.gone.push({ kind: group.kind, pos: group.pos, count: group.count });
   return taken;
 }
 
-// Step 3: a queue lets out up to its rate, oldest first, at the start of the next slot.
+// Step 3a: everything in a queue has waited one tick more. A request that has now
+// waited longer than rules.patience (counting every queue it was in) gives up and
+// leaves. A legitimate one is an error, the same as reaching the exit unanswered.
+// This is the price of a queue: it holds a burst, but the people in it are waiting.
+function waitInQueue(state, slot) {
+  const tower = state.slots[slot];
+  const staying = [];
+  for (const group of tower.held) {
+    group.waited += 1;
+    if (group.waited <= rules.patience) {
+      staying.push(group);
+    } else if (kinds[group.kind].legit) {
+      unanswered(state, group);
+      state.timedOut += group.count;
+      state.gaveUp[slot] += group.count;
+    }
+  }
+  tower.held = staying;
+}
+
+// Step 3b: a queue lets out up to its rate, oldest first, at the start of the next slot.
 function releaseFromQueue(state, slot) {
   const tower = state.slots[slot];
   const exitPos = (slot + 1) * rules.slotUnits;
@@ -207,7 +235,7 @@ function releaseFromQueue(state, slot) {
     oldest.count -= count;
     room -= count;
     if (oldest.count === 0) tower.held.shift();
-    const group = { kind: oldest.kind, pos: exitPos, count };
+    const group = { kind: oldest.kind, pos: exitPos, count, waited: oldest.waited };
     if (exitPos >= laneLength(state.level)) leave(state, group);
     else state.lane.push(group);
   }
@@ -219,7 +247,7 @@ function fillQueue(state, slot) {
   const room = towers.queue.size - heldCount(tower);
   const taken = takeFromSlot(state, slot, towers.queue.takes, room);
   for (const group of taken) {
-    tower.held.push({ kind: group.kind, count: group.count });
+    tower.held.push({ kind: group.kind, count: group.count, waited: group.waited });
     state.worked[slot] += group.count;
   }
 }
@@ -259,6 +287,7 @@ export function tick(state) {
   if (state.status !== 'playing') return state;
   const next = copy(state);
   next.worked = new Array(next.level.slots).fill(0);
+  next.gaveUp = new Array(next.level.slots).fill(0);
   next.gone = [];
   next.newErrors = 0;
   next.paid = 0;
@@ -266,7 +295,10 @@ export function tick(state) {
   moveRequests(next);
   spawnRequests(next);
   next.slots.forEach((tower, slot) => {
-    if (tower && tower.kind === 'queue') releaseFromQueue(next, slot);
+    if (tower && tower.kind === 'queue') {
+      waitInQueue(next, slot);
+      releaseFromQueue(next, slot);
+    }
   });
   next.slots.forEach((tower, slot) => {
     if (!tower) return;

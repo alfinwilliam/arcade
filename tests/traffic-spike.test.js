@@ -79,14 +79,23 @@ test('ts-01: doing nothing loses in wave 1', () => {
   assert.equal(end.wave, 1);
 });
 
-test('ts-01 and the components still have the modelled numbers', () => {
+test('ts-01: three servers and a cache, without the limiter, lose in wave 3', () => {
+  // It costs every rupee the level pays, and 8 bots + 2 API calls a tick is still more than 3 x 3.
+  const noLimiter = [buy('server', 3, 1), buy('cache', 0, 2), buy('server', 2, 2), buy('server', 1, 3)];
+  const end = replay(byId('ts-01'), noLimiter);
+  assert.deepEqual(end.rejected, []);
+  assert.equal(end.status, 'lost');
+  assert.equal(end.wave, 3);
+});
+
+test('ts-01 and the components keep the numbers the tests above were worked out with', () => {
   const level = byId('ts-01');
   assert.deepEqual(
     { slots: level.slots, budget: level.budget, errorBudget: level.errorBudget, waves: level.waves },
     { slots: 4, budget: 100, errorBudget: 20, waves: [
       { ticks: 40, perTick: { api: 2 }, reward: 60 },
       { ticks: 40, perTick: { api: 2, static: 5 }, reward: 60 },
-      { ticks: 40, perTick: { api: 2, static: 5, bot: 6 }, reward: 0 },
+      { ticks: 40, perTick: { api: 2, static: 5, bot: 8 }, reward: 0 },
     ] },
   );
   assert.deepEqual([towers.cache.cost, towers.cache.rate, towers.cache.takes], [40, 6, ['static']]);
@@ -197,6 +206,20 @@ test('ts-03: a limiter behind the queue lets the bots fill the queue first', () 
   const end = replay(byId('ts-03'), [buy('server', 3, 1), buy('queue', 0, 2), buy('limiter', 1, 3)]);
   assert.equal(end.status, 'lost');
   assert.equal(end.wave, 3);
+});
+
+test('ts-05: two queues in a row cannot stand in for a second server', () => {
+  // Wave 2 sends 6 API calls a tick for 40 ticks at one server (3 a tick). The queues
+  // fill, and the requests at the back wait too long and give up.
+  const stacked = [
+    buy('cache', 0, 1), buy('cache', 1, 1), buy('server', 4, 1),
+    sell('cache', 1, 2), buy('limiter', 1, 2), buy('queue', 2, 2), buy('queue', 3, 2),
+  ];
+  const end = replay(byId('ts-05'), stacked);
+  assert.deepEqual(end.rejected, []);
+  assert.equal(end.status, 'lost');
+  assert.equal(end.wave, 2);
+  assert.ok(end.timedOut > 0, 'the errors are requests giving up in the queues');
 });
 
 test('ts-04: cannot be won without selling', () => {
@@ -335,7 +358,53 @@ test('a queue lets requests out oldest first', () => {
   let state = apply(start(level), buy('queue', 0));
   state = ticks(state, 2);                                // took in 3, let out 0; then took in 3 more, let out 3
   assert.equal(heldCount(state.slots[0]), 3);
-  assert.deepEqual(state.lane, [{ kind: 'api', pos: rules.slotUnits, count: 3 }]);
+  assert.deepEqual(state.lane, [{ kind: 'api', pos: rules.slotUnits, count: 3, waited: 1 }]);
+});
+
+// Puts `count` requests of `kind` in a queue in slot 0, as if they had already waited `waited` ticks.
+function queueHolding(kind, count, waited) {
+  const level = tiny({ slots: 2, waves: [{ ticks: 1, perTick: { [kind]: count }, reward: 0 }] });
+  const state = tick(apply(start(level), buy('queue', 0)));
+  state.slots[0].held[0].waited = waited;                  // our own copy: tick() made it
+  return state;
+}
+
+test('a request that has waited rules.patience ticks in a queue gives up on the next tick: an error', () => {
+  const state = tick(queueHolding('api', 9, rules.patience));
+  assert.equal(heldCount(state.slots[0]), 0);
+  assert.equal(onLane(state, 'api'), 0);                   // gone, not let out
+  assert.deepEqual([state.errors, state.timedOut, state.gaveUp[0], state.newErrors], [9, 9, 9, 0]);
+  assert.deepEqual(state.missed, { api: 9 });
+});
+
+test('one tick less, and the queue still lets it out', () => {
+  const state = tick(queueHolding('api', 9, rules.patience - 1));
+  assert.equal(state.errors, 0);
+  assert.equal(onLane(state, 'api'), towers.queue.rate);
+  assert.equal(heldCount(state.slots[0]), 9 - towers.queue.rate);
+});
+
+test('a bot that gives up in a queue is not an error', () => {
+  const state = tick(queueHolding('bot', 9, rules.patience));
+  assert.equal(heldCount(state.slots[0]), 0);
+  assert.deepEqual([state.errors, state.timedOut], [0, 0]);
+});
+
+test('waiting adds up across queues in a row, so a second queue does not reset it', () => {
+  const level = tiny({ slots: 3, waves: [{ ticks: 1, perTick: { api: 9 }, reward: 0 }] });
+  let state = apply(apply(start(level), buy('queue', 0)), buy('queue', 1));
+  state = ticks(state, 2);                                 // the first queue lets 3 out into the second
+  assert.deepEqual(state.slots[1].held, [{ kind: 'api', count: towers.queue.rate, waited: 1 }]);
+});
+
+test('a queue cannot fix traffic that stays above what the server behind it can answer', () => {
+  // Twice what one server answers, for long enough that the backlog outlasts anyone's patience.
+  const rate = towers.server.rate;
+  const level = tiny({ slots: 2, waves: [{ ticks: rules.patience * 2, perTick: { api: rate * 2 }, reward: 0 }] });
+  const queued = replay(level, [buy('queue', 0), buy('server', 1)]);
+  assert.ok(queued.timedOut > 0, 'some give up waiting');
+  // A second server, with no queue at all, answers every request.
+  assert.equal(replay(level, [buy('server', 0), buy('server', 1)]).errors, 0);
 });
 
 // ---------------------------------------------------------------- rules: buying and selling

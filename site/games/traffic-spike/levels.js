@@ -6,7 +6,8 @@
 //   Requests enter a lane on the left and walk to the exit on the right. The lane is
 //   cut into slots, and the player puts one component in a slot. Each tick a component
 //   handles up to its `rate` of the requests inside its slot. A legitimate request
-//   (static or api) that reaches the exit unanswered is an error. Bots that reach the
+//   (static or api) that reaches the exit unanswered is an error. So is one that waits
+//   in queues for more than `rules.patience` ticks: it gives up. Bots that reach the
 //   exit cost nothing, but until then they use up servers and queues.
 //
 // A LEVEL (every field is required)
@@ -40,8 +41,8 @@
 //      the URL, and win your level.
 //   3. The win panel shows the actions you took. Paste them into `solution`.
 //   4. Run `python3 scripts/arcade.py test traffic-spike`. The tests insist that the
-//      solution wins with a quarter of the error budget to spare, and that doing
-//      nothing loses.
+//      solution wins with a quarter of the error budget to spare, that doing nothing
+//      loses in wave 1, and that the solution without its first action loses.
 //
 // RULES OF THUMB WHEN TUNING
 //   - A request spends slotUnits / speed = 5 ticks inside each slot.
@@ -49,12 +50,17 @@
 //     6 static per tick; 12 per tick needs two.
 //   - A server answers bots first, then static, then api (the order of its `takes`
 //     list). So bots and static that are not filtered out before the server waste it.
-//   - A queue takes in everything, up to `size`, and lets out `rate` per tick.
+//     (A real server answers in arrival order; bots first is the worst case of that.)
+//   - A queue takes in everything, up to `size`, and lets out `rate` per tick. A backlog
+//     of 60 takes 60 / 3 = 20 ticks to clear, and anyone who would wait longer than
+//     `patience` ticks gives up. So a queue rides out a short burst, but traffic that
+//     stays too high needs another server, not another queue.
 
 // Numbers that apply to every level.
 export const rules = {
   slotUnits: 10,          // length of one slot
   speed: 2,               // units a request moves per tick
+  patience: 25,           // ticks a request will wait in queues, in all, before it gives up (an error)
   sellPercent: 50,        // selling gives back this much of the cost (selling at once gives back all of it)
   threeStarPercent: 25,   // three stars for using at most this much of the error budget
   twoStarPercent: 60,     // two stars for using at most this much; anything else that wins is one star
@@ -75,10 +81,10 @@ export const kinds = {
 //   size   queue only: how many requests it can hold
 //   does   one short line for the shop button
 export const towers = {
-  server:  { name: 'Server',       cost: 60, rate: 3, takes: ['bot', 'static', 'api'], does: 'Answers anything, junk first.' },
+  server:  { name: 'Server',       cost: 60, rate: 3, takes: ['bot', 'static', 'api'], does: 'Answers anything, bots included.' },
   cache:   { name: 'Cache',        cost: 40, rate: 6, takes: ['static'],               does: 'Answers static files.' },
   limiter: { name: 'Rate limiter', cost: 40, rate: 8, takes: ['bot'],                  does: 'Drops bots.' },
-  queue:   { name: 'Queue',        cost: 30, rate: 3, size: 80, takes: ['bot', 'static', 'api'], does: 'Holds a burst, lets it out slowly.' },
+  queue:   { name: 'Queue',        cost: 30, rate: 3, size: 80, takes: ['bot', 'static', 'api'], does: 'Holds a burst, lets it out steadily.' },
 };
 
 export const levels = [
@@ -88,7 +94,7 @@ export const levels = [
     waves: [
       { ticks: 40, perTick: { api: 2 },                    reward: 60 },
       { ticks: 40, perTick: { api: 2, static: 5 },         reward: 60 },
-      { ticks: 40, perTick: { api: 2, static: 5, bot: 6 }, reward: 0 },
+      { ticks: 40, perTick: { api: 2, static: 5, bot: 8 }, reward: 0 },
     ],
     solution: [
       { wave: 1, t: 0, buy: 'server',  slot: 3 },
@@ -113,8 +119,8 @@ export const levels = [
       { wave: 4, t: 0, buy: 'limiter', slot: 2 },
     ] },
 
-  { id: 'ts-03', title: 'Flash sale', slots: 4, budget: 60, errorBudget: 20,
-    intro: 'A burst is too much for a server at once. A queue in front of it holds the burst and feeds it through.',
+  { id: 'ts-03', title: 'Flash sale', slots: 4, budget: 80, errorBudget: 20,
+    intro: 'A burst swamps one server. A queue in front holds it and feeds it in, if nobody waits too long.',
     shop: ['server', 'queue', 'limiter'],
     waves: [
       { ticks: 40, perTick: { api: 3 },         reward: 30 },
@@ -155,14 +161,14 @@ export const levels = [
       { ticks: 30, perTick: { static: 6, api: 5, bot: 14 }, reward: 0 },
     ],
     solution: [
-      { wave: 1, t: 0, buy: 'cache',    slot: 0 },
       { wave: 1, t: 0, buy: 'cache',    slot: 1 },
+      { wave: 1, t: 0, buy: 'cache',    slot: 3 },
       { wave: 1, t: 0, buy: 'server',   slot: 4 },
-      { wave: 2, t: 0, sell: 'cache',   slot: 1 },
-      { wave: 2, t: 0, buy: 'limiter',  slot: 1 },
-      { wave: 2, t: 0, buy: 'queue',    slot: 2 },
-      { wave: 2, t: 0, buy: 'queue',    slot: 3 },
-      { wave: 4, t: 0, sell: 'queue',   slot: 2 },
+      { wave: 2, t: 0, sell: 'cache',   slot: 3 },
+      { wave: 2, t: 0, buy: 'limiter',  slot: 0 },
+      { wave: 2, t: 0, buy: 'server',   slot: 2 },
+      { wave: 3, t: 0, buy: 'queue',    slot: 3 },
+      { wave: 4, t: 0, sell: 'server',  slot: 2 },
       { wave: 4, t: 0, buy: 'limiter',  slot: 2 },
     ] },
 ];

@@ -60,7 +60,7 @@
 
 .ts-shop { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 .ts-buy {
-  display: grid; gap: 2px; justify-items: start; align-content: start;
+  display: grid; gap: 2px; justify-content: stretch; justify-items: start; align-content: start;
   padding: 8px 10px; text-align: left;
   border-left-width: 4px;
 }

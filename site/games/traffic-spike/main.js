@@ -341,14 +341,19 @@ function drawSelection(x, w, h, look) {
 }
 
 // What a component says about this tick, e.g. "3/3 max" or "37/80".
+// `short` is used when the long text does not fit the slot; `bad` draws it in red.
 function towerStatus(slot, tower) {
+  const gaveUp = state.gaveUp[slot];
+  if (gaveUp > 0) return { text: `✕ ${gaveUp} gave up`, short: `✕ ${gaveUp}`, bad: true };
   if (tower.kind === 'queue') {
     const held = heldCount(tower);
-    return held >= towers.queue.size ? `full ${held}` : `${held}/${towers.queue.size}`;
+    const text = held >= towers.queue.size ? `full ${held}` : `${held}/${towers.queue.size}`;
+    return { text, short: String(held), bad: false };
   }
   const rate = towers[tower.kind].rate;
   const worked = state.worked[slot];
-  return worked >= rate ? `${worked}/${rate} max` : `${worked}/${rate}`;
+  const text = worked >= rate ? `${worked}/${rate} max` : `${worked}/${rate}`;
+  return { text, short: text, bad: false };
 }
 
 function drawTowerLabel(slot, tower, centre, look) {
@@ -356,8 +361,10 @@ function drawTowerLabel(slot, tower, centre, look) {
   ctx.font = `700 11px ${look.mono}`;
   ctx.fillText(tower.kind.toUpperCase(), centre, 13);
   ctx.font = `600 11px ${look.mono}`;
-  ctx.fillStyle = look.muted;
-  ctx.fillText(towerStatus(slot, tower), centre, 27);
+  const status = towerStatus(slot, tower);
+  const fits = ctx.measureText(status.text).width <= geo.slotW - 8;
+  ctx.fillStyle = status.bad ? look.bad : look.muted;
+  ctx.fillText(fits ? status.text : status.short, centre, 27);
 }
 
 // Add up groups of requests by kind and position, so each spot is drawn once.
@@ -488,7 +495,8 @@ function build() {
   main.append(
     el('p', { class: 'how' }, 'Stop real requests reaching the exit unanswered: pick a slot, buy a component for it, then send the wave.'),
     view.picker,
-    el('section', { class: 'panel stack' }, buildHead(), view.board, view.say, view.result, buildControls(), view.shop),
+    el('section', { class: 'panel stack' }, buildHead(), view.board, view.say, view.result,
+      el('div', { class: 'row' }, view.send, view.sell), view.shop, buildSettings()),
     el('section', { class: 'panel stack' }, el('h3', {}, 'Waves in this level'), view.waves, buildLegend()),
     el('p', { class: 'muted ts-keys' }, kbd('←'), ' ', kbd('→'), ' pick a slot · ', kbd('1'), '–', kbd('4'), ' buy · ',
       kbd('X'), ' sell · ', kbd('Space'), ' send or pause · ', kbd('F'), ' speed · ', kbd('R'), ' restart'),
@@ -503,10 +511,9 @@ function buildHead() {
       view.meter));
 }
 
-function buildControls() {
+// Speed and restart sit under the shop: the shop is what a new player needs first.
+function buildSettings() {
   return el('div', { class: 'row' },
-    view.send,
-    view.sell,
     el('div', { class: 'ts-speed', role: 'group', 'aria-label': 'Speed' }, el('span', { class: 'muted' }, 'Speed'), view.speeds),
     el('button', { class: 'btn btn-quiet', type: 'button', onclick: () => openLevel(levelIndex, true) }, 'Restart', kbd('R')));
 }
@@ -539,7 +546,9 @@ function buildLevel() {
 
 function shopButton(kind) {
   const tower = towers[kind];
-  const rate = kind === 'queue' ? `Holds ${tower.size}, lets out ${tower.rate} a tick.` : `Up to ${tower.rate} a tick.`;
+  const rate = kind === 'queue'
+    ? `Holds ${tower.size}, lets out ${tower.rate} a tick. Anyone waiting over ${rules.patience} ticks gives up.`
+    : `Handles up to ${tower.rate} a tick.`;
   return el('button', { class: 'btn ts-buy', type: 'button', dataset: { tower: kind }, onclick: () => buySelected(kind) },
     el('span', { class: 'ts-buy-top' },
       kbd(String(TOWER_ORDER.indexOf(kind) + 1)), el('span', {}, tower.name), el('span', { class: 'ts-buy-cost' }, `₹${tower.cost}`)),
@@ -706,10 +715,15 @@ function wonLines(lastLevel) {
 }
 
 function lostLines() {
+  const timedOut = state.timedOut > 0 ? ` ${state.timedOut} of them gave up waiting in a queue.` : '';
+  const hint = state.timedOut > 0
+    ? 'A queue only buys time. If the traffic stays too high for too long, add a server.'
+    : 'Watch which shapes reach the exit, and which component shows "max". Then put something in their way.';
   return [
     el('h2', {}, `Error budget spent in wave ${state.wave}`),
-    el('p', { class: 'ts-result-facts' }, `${state.errors} errors, ${state.level.errorBudget} allowed. Unanswered: ${missedText()}.`),
-    el('p', { class: 'muted' }, 'Watch which shapes reach the exit, and which component shows "max". Then put something in their way.'),
+    el('p', { class: 'ts-result-facts' },
+      `${state.errors} errors, ${state.level.errorBudget} allowed. Unanswered: ${missedText()}.${timedOut}`),
+    el('p', { class: 'muted' }, hint),
   ];
 }
 
