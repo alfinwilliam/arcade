@@ -13,6 +13,8 @@ export const games = [
     blurb: 'Buy nodes, place pods by their CPU and memory requests, ride out taints and spot reclaims, and keep the bill under the cap.' },
   { id: 'traffic-spike', title: 'Traffic Spike', tag: 'defence', accent: 3,
     blurb: 'One-lane tower defence: place caches, rate limiters, queues and servers so no real request reaches the exit unanswered.' },
+  { id: 'escape-shell', title: 'Escape Shell', tag: 'terminal', accent: 5,
+    blurb: 'A service is down on a pretend server. Investigate with real commands, find the cause, and bring it back.' },
   { id: 'sling-orbit', title: 'Sling Orbit', tag: 'physics', accent: 4,
     blurb: 'Aim one launch and let the planets bend your path through every target, then brake into a parking orbit.' },
   { id: 'drift', title: 'Drift', tag: 'toy', accent: 6,
