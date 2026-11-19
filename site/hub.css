@@ -81,14 +81,20 @@
 
 /* ---------------------------------------------------------------- planets */
 
+/* Every label paints above every planet body, so a passing planet never hides a name.
+   That only works if the button is not its own layer: no z-index and no transform here.
+   Zero width + centred column = the body sits centred on the orbit point (left/top). */
 .planet {
-  position: absolute; z-index: 1;
-  display: grid; justify-items: center; gap: 4px;
+  position: absolute; width: 0; margin-top: calc(var(--planet) / -2);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 0; border: 0; background: none; color: var(--text);
-  transform: translate(-50%, calc(var(--planet) / -2));   /* centre the body on its orbit point */
   cursor: pointer;
 }
-.planet:hover, .planet:focus-visible, .planet[aria-pressed="true"] { z-index: 2; }
+.planet-body, .planet-name { position: relative; flex: none; }
+.planet-body { z-index: 1; }
+.planet-name { z-index: 3; }
+.planet:hover .planet-body, .planet:focus-visible .planet-body, .planet[aria-pressed="true"] .planet-body { z-index: 2; }
+.planet:hover .planet-name, .planet:focus-visible .planet-name, .planet[aria-pressed="true"] .planet-name { z-index: 4; }
 .planet:focus-visible { outline: none; }
 .planet:focus-visible .planet-body { outline: 3px solid var(--text); outline-offset: 4px; }
 
